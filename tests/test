@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Parse arguments
+if [ "$#" -eq 1 ]; then # Case do all tests
+  getnum="find . -type f -name '$1_in_*' | wc -l"
+  numbers=$(eval $getnum)
+  numbers=$(seq $numbers)
+elif [ "$#" -eq 2 ]; then # Case do specific te1st
+  numbers=$2
+else # Case incorrect input
+  echo "Invalid input, exiting."
+  exit 1
+fi
+
+name=$1 
+program="./../build/${name}"
+temp=.tempfile
+
+echo "Unit Test $1 (left=expected, right=produced)"
+echo ""
+
+for i in $numbers
+do
+  echo -n "Test No. $i"
+  inputname="${name}_in_${i}"
+  outputname="${name}_out_${i}"
+  input=$(cat ${inputname})
+  #output=$(cat ${outputname})
+  #realoutput=$(${program} ${input})
+  ${program} ${input} > ${temp}
+  output=$(diff -q $outputname ${temp})
+  if [[ ${output} = "" ]] ; then
+    echo " - PASS"
+  else
+    echo " - FAIL"
+    diff -y $outputname ${temp}
+  fi
+done
+
