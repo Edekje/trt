@@ -1,13 +1,12 @@
 #include <config.h>
 #include <ctype.h> // isdigit()
-#include <string>
-#include <iostream>
+#include <string> // string and stoi/stod
+#include <sstream> // string
 
 namespace trt {
 
 	void Config::loadArgs(int argc, char** argv) {
 		std::string key = "";
-		std::string param = "";
 		for(int i = 1; i < argc; i++) {
 			// Need to save previous arg as key
 			bool prev_is_key = !key.empty();
@@ -21,9 +20,57 @@ namespace trt {
 				if(prev_is_key) (*this)[key] = argv[i];
 				key = "";
 			}
-		}
 			// Case arg is neither parameter, nor key (does not start with -):
 			// Then just ignore this argument.
+		}
+		if(!key.empty()) (*this)[key] = ""; // Don't forget the last key.
+
 	}
+	
+	void Config::loadString(std::string filestring) {
+		std::stringstream ss1(filestring);
+		std::string line, key, param;
+		while( std::getline(ss1, line).good() ) {
+			std::stringstream ss2(line);
+			ss2 >> key;
+			if(ss2.fail() || key[0]!='-' || key.size()  < 2) continue;
+			std::getline(ss2 >> std::ws, param); // Read till end of line & left trim whitespace
+			if(ss2.fail()) param = "";
+			param.erase(param.find_last_not_of(" \n\r\t")+1); // Right trim whitespace.
+			(*this)[key.substr(1)] = param;
+		}
+	}
+
+	bool Config::isset(std::string key) {
+		return (*this).find(key)!=(*this).end();
+	}
+
+	int Config::getInt(std::string key) {
+		auto it = (*this).find(key);
+		if( it==(*this).end() ) throw std::out_of_range("getInt: Key does not exist.");
+		return std::stoi(it->second); // Apply conversion
+	}
+	
+	double Config::getDouble(std::string key) {
+		auto it = (*this).find(key);
+		if( it==(*this).end() ) throw std::out_of_range("getDouble: Key does not exist.");
+		return std::stod(it->second); // Apply conversion
+	}
+
+	std::string Config::getString(std::string key) {
+		auto it = (*this).find(key);
+		if( it==(*this).end() ) throw std::out_of_range("getString: Key does not exist.");
+		return it->second;
+	}
+
+	bool Config::getBool(std::string key) {
+		auto it = (*this).find(key);
+		if( it==(*this).end() ) throw std::out_of_range("getString: Key does not exist.");
+		std::string val = it->second;
+		if(val=="1") return true;
+		else if(val=="0") return false;
+		else throw std::invalid_argument("getBool: Parameter is not 1 or 0.");
+	}
+	
 }
 

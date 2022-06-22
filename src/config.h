@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <stdexcept>
 
 namespace trt {
 
@@ -17,21 +18,22 @@ namespace trt {
 		  // Load from arguments to main
 		  void loadArgs(int argc, char** argv);
 		  /* Load from string in format:
-		   * argument<whitespace>[optional parameter]<newline>, e.g.:
-		   * "n 5\np\nq a b\n" (gives same result as above) */
-		  //void loadFile(std::string filename);
-
-	      // Indicates whether an argument has been set at all.
-		  //bool			isset(std::string key);
+		   * -argument<whitespace>[optional parameter]<newline>, e.g.:
+		   * "-n 5\n-p\n-q a b\n#Comment\n" (gives same result as above) 
+		   * Any line beginning without - is ignored / may be used as a comment */
+		  void loadString(std::string filestring);
+	      
+		  // Indicates whether an argument has been set at all.
+		  bool			isset(std::string key);
+		  
 		  /* Functions to parse parameters into string, int, double, bool.
 		   * These throw invalid_argument if no conversion could be performed,
 		   * out_of_range if the value is out of range */
-		  //std::string	getString(std::string key);
-		  //int			getInt(std::string key);
-		  //double		getDouble(std::string key);
-
+		  std::string	getString(std::string key);
+		  int			getInt(std::string key);
+		  double		getDouble(std::string key);
 	      // Returns true if key="1", false if key="0", invalid_argument otherwise.
-		  //bool			getBool(std::string key);
+		  bool			getBool(std::string key);
 	};
 }
 

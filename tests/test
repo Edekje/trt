@@ -2,7 +2,7 @@
 
 # Parse arguments
 if [ "$#" -eq 1 ]; then # Case do all tests
-  getnum="find . -type f -name '$1_in_*' | wc -l"
+  getnum="find . -type f -name '$1_out_*' | wc -l"
   numbers=$(eval $getnum)
   numbers=$(seq $numbers)
 elif [ "$#" -eq 2 ]; then # Case do specific te1st

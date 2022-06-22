@@ -1,0 +1,12 @@
+one:1
+two:0
+I1:-1
+I2:stoi
+D1:1e+07
+D2:stod
+D3:getString: Key does not exist.
+S1:argg
+S2:33
+B1:1
+B2:0
+B3:getBool: Parameter is not 1 or 0.
