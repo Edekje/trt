@@ -1,12 +1,16 @@
 #include <microphysics.h>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
+#include <globals.h>
+		
+#define CHECKSET(XXX) if(param.isset("XXX")) XXX = param.getDouble("XXX"); else throw std::invalid_argument("Necessary argument -XXX to CS_Microphysics is missing.")
 
 namespace trt {
 	
 	/* See eq. (6, 8, 22), (45)Fouka & Ouichaoui (2014):
      * https://ui.adsabs.harvard.edu/abs/2014MNRAS.442..979F/abstract */
-	trt::FP_Fouka::FP_Fouka(double p) {
+	FP_Fouka::FP_Fouka(double p) {
 		const double // Constants for interpolation of a1/a2/a4/b1 constants for given p.
 		a10=-0.14602   ,a11= 3.62307e-2,a12=-5.76507e-3,a13= 3.46926e-4                ,
 		a20=-0.36648   ,a21= 0.18031   ,a22=-7.30773e-2,a23= 1.12484e-2,a24=-6.17683e-4,
@@ -24,12 +28,44 @@ namespace trt {
 		b1 = b10 + b11*p + b12*pow(p,2.0) + b13*pow(p,3.0)                 ;
 	}
 
-	double trt::FP_Fouka::operator()(double x) const {
+	double FP_Fouka::operator()(double x) const {
 		/* Approximation: max error < 0.5% for 1 < p < 6 (eq. 22 Fouka 2014) */
 		double exp1 = exp( a1 * x * x + a2 * x + a3 * pow(x,2.0/3.0) );
 		double exp2 = pow( (1.0 - exp( b1 * x * x) ), p/5.0+1.0/2.0);
 		return k_p*pow(x, 1.0/3.0)*exp1+C_p*pow(x,-(p-1.0)/2.0)*exp2;
 	}
+	
+	CS_Microphysics::CS_Microphysics(Config& param) {
+		// Checks if following parameters are present & sets them or throws exception.
+		p = param.getDouble("p");
+		e_e = param.getDouble("e_e");
+		e_b = param.getDouble("e_b");
+		f = param.getDouble("f");
+		M = param.getDouble("M");
+		L = param.getDouble("L");
+		FP_Fouka temp1(p), temp2(p+1);
+		FP1 = temp1;
+		FP2 = temp2;
+	}
+	
+	double KIN_E_COLD(double p) { return 3/2*p; } // Gives (e-rho) provided non-rel fluid.
+	
+	AbsEm CS_Microphysics::getAbsEm(HydroVar HV, double nu) {
+		double KINE = KIN_E_COLD(HV.p); // Formula correct in non-rel fluid case.
+		double gamma_1 = (p-2)/(p-1) * M_PROTON / M_ELECTRON * e_e / f * KINE / HV.rho; //gamma_m
+		double B = C_LIGHT*sqrt(8*M_PI*e_b*KINE * M * pow(L, -3) ); // B field in gauss
+		double nu_larmor = B*Q_ELECTRON/2/M_PI/M_ELECTRON/C_LIGHT;
+		std::cout << KINE << 0 << gamma_1 << B << nu_larmor << std::endl;
+		double x = nu / nu_larmor;
+		double C = (p-1)*HV.rho*M*pow(L,-3)/M_PROTON; // gamma_1^(P-1) cancels w/ P_1 expr.
+		double P_1 = M_PI * sqrt(3)*pow(Q_ELECTRON, 2)*nu_larmor * C / C_LIGHT;
+		double nu_1 = 3/2*pow(gamma_1,2)*nu_larmor;
+		
+		double em_coeff = P_1 * FP1(x) / 4/ M_PI; // in erg / s / Hz / cm / sr
+		double abs_coeff = P_1 / gamma_1 * pow(x,2) * FP2(x); // 1 / cm
 
-};
+		AbsEm returnme(abs_coeff*L, em_coeff*L); // convert to units of 1 / L
+		return returnme;
+	}
+}
 
