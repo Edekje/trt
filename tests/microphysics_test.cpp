@@ -18,11 +18,24 @@ int main(int argv, char** argc) {
 		std::cout << "1e6 evals of FP_Fouka took " << std::chrono::duration_cast<std::chrono::milliseconds>(c-b).count() << " ms." << '\n';
 		return 0;
 	}
+	
+	if(C.isset("SPEED2")) {
+		trt::HydroVar HQ(1.1,1.1);
+		auto a = std::chrono::high_resolution_clock::now();
+		for(int i = 0; i < 1000000; i++) trt::CS_Microphysics FP(C);
+		auto b = std::chrono::high_resolution_clock::now();
+		trt::CS_Microphysics CSRM(C);
+		for(int i = 0; i < 1000000; i++) CSRM.getAbsEm(HQ, 1.0e10);
+		auto c = std::chrono::high_resolution_clock::now();
+		std::cout << "1e6 inits of FP_Fouka took " << std::chrono::duration_cast<std::chrono::milliseconds>(b-a).count() << " ms." << '\n';
+		std::cout << "1e6 evals of FP_Fouka took " << std::chrono::duration_cast<std::chrono::milliseconds>(c-b).count() << " ms." << '\n';
+		return 0;
+	}
 
 	if(C.isset("e_b")) {
 		trt::CS_Microphysics CSM(C);
-		trt::HydroVar HV(1.1, 1.1);
-		double nu = 1e8;
+		trt::HydroVar HV(C.getDouble("rho"), C.getDouble("pressure"));
+		double nu = C.getDouble("nu");
 		trt::AbsEm AE = CSM.getAbsEm(HV, nu);
 		std::cout << "Abs: " << AE.abs << " Em: " << AE.em << '\n';
 		return 0;
