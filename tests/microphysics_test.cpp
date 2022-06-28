@@ -27,8 +27,8 @@ int main(int argv, char** argc) {
 		trt::CS_Microphysics CSRM(C);
 		for(int i = 0; i < 1000000; i++) CSRM.getAbsEm(HQ, 1.0e10);
 		auto c = std::chrono::high_resolution_clock::now();
-		std::cout << "1e6 inits of FP_Fouka took " << std::chrono::duration_cast<std::chrono::milliseconds>(b-a).count() << " ms." << '\n';
-		std::cout << "1e6 evals of FP_Fouka took " << std::chrono::duration_cast<std::chrono::milliseconds>(c-b).count() << " ms." << '\n';
+		std::cout << "1e6 inits of CS_Microphysics took " << std::chrono::duration_cast<std::chrono::milliseconds>(b-a).count() << " ms." << '\n';
+		std::cout << "1e6 evals of CS_Microphysics took " << std::chrono::duration_cast<std::chrono::milliseconds>(c-b).count() << " ms." << '\n';
 		return 0;
 	}
 
