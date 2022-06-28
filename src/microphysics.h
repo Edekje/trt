@@ -1,7 +1,8 @@
 #ifndef TRT_MICROPHYSICS_H
 #define TRT_MICROPHYSICS_H
 
-#include <config.h>
+#include <config.h> // class Config
+#include <hydro.h>	// class HydroVar
 
 namespace trt {
 	/* Absorption and Emission coefficients
@@ -12,13 +13,6 @@ namespace trt {
 		double abs, em;
 	};
 
-	// Stores rest frame fluid rest-mass density and pressure
-	class HydroVar {
-		public:
-		HydroVar(double R, double P) : rho{R}, p{P} {}
-		double rho, p;
-	};
-	
 	/* This class represents a function object for given power law p
 	 * for function F_p(x) = x^{-(p-1)/2} \int_0^x dx' x'^{(p-3)/2} F(x'),
 	 * where F(x) = x \int_x^{\infty} K_{5/3}(x') dx' is the synchrotron

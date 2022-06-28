@@ -3,6 +3,9 @@
 #include <iostream>
 #include <chrono>
 
+
+double e_th_cold(double rho, double p) {return p*3/2;}
+
 int main(int argv, char** argc) {
 	trt::Config C;
 	C.loadArgs(argv, argc);
@@ -20,7 +23,7 @@ int main(int argv, char** argc) {
 	}
 	
 	if(C.isset("SPEED2")) {
-		trt::HydroVar HQ(1.1,1.1);
+		trt::HydroVar HQ(1.1,e_th_cold(1.1,1.1));
 		auto a = std::chrono::high_resolution_clock::now();
 		for(int i = 0; i < 1000000; i++) trt::CS_Microphysics FP(C);
 		auto b = std::chrono::high_resolution_clock::now();
@@ -34,7 +37,7 @@ int main(int argv, char** argc) {
 
 	if(C.isset("e_b")) {
 		trt::CS_Microphysics CSM(C);
-		trt::HydroVar HV(C.getDouble("rho"), C.getDouble("pressure"));
+		trt::HydroVar HV(C.getDouble("rho"), e_th_cold(C.getDouble("rho"), C.getDouble("pressure")));
 		double nu = C.getDouble("nu");
 		trt::AbsEm AE = CSM.getAbsEm(HV, nu);
 		std::cout << "Abs: " << AE.abs << " Em: " << AE.em << '\n';
@@ -43,9 +46,9 @@ int main(int argv, char** argc) {
 
     if(!C.isset("Q")) {
 	trt::AbsEm X {1.0, 2.0};
-	trt::HydroVar Y {3.9, 5.9};
+	trt::HydroVar Y {3.9, e_th_cold(3.9, 5.9)};
 	std::cout << "Abs: " << X.abs << " Em: " << X.em << '\n';
-	std::cout << "Rho: " << Y.rho << " Em: " << Y.p << '\n';
+	std::cout << "Rho: " << Y.rho << " E_th: " << Y.e_th << '\n';
 	
 	trt::FP_Fouka FP1(C.getDouble("p1"));
 	trt::FP_Fouka FP2(C.getDouble("p2"));

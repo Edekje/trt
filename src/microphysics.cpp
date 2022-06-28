@@ -48,14 +48,12 @@ namespace trt {
 		FP2 = temp2;
 	}
 	
-	double KIN_E_COLD(double p) { return 3.0/2.0 * p; } // Gives (e-rho) provided non-rel fluid.
-	
 	AbsEm CS_Microphysics::getAbsEm(HydroVar HV, double nu) {
-		// B = c sqrt(8 pi rho*(gamma-1)) rho (gamma-1) = e - rho = p / (adiabindex-1)
-		double KINE = KIN_E_COLD(HV.p); // Formula correct in non-rel fluid case.
-		double gamma_pmin1 = KINE / HV.rho;
+		// B = c sqrt(8 pi rho*(gamma-1))
+		// rho (gamma-1) = e - rho = p / (adiabindex-1) = e_th
+		double gamma_pmin1 = HV.e_th / HV.rho;
 		double gamma_1 = (p-2)/(p-1) * M_PROTON / M_ELECTRON * e_e / f * gamma_pmin1; //gamma_m
-		double B = C_LIGHT*sqrt(8*M_PI*e_b*KINE * M * pow(L, -3) ); // B field in gauss
+		double B = C_LIGHT*sqrt(8*M_PI*e_b*HV.e_th * M * pow(L, -3) ); // B field in gauss
 		double nu_larmor = B*Q_ELECTRON/2.0/M_PI/M_ELECTRON/C_LIGHT;
 		double C = (p-1)*HV.rho*M*pow(L,-3)/M_PROTON/f; // gamma_1^(P-1) cancels w/ P_1 expr.
 		double P_1 = M_PI * sqrt(3)*pow(Q_ELECTRON, 2)*nu_larmor * C / C_LIGHT;
@@ -65,7 +63,7 @@ namespace trt {
 		double em_coeff = P_1 * FP1(x) / 4.0 / M_PI; // in erg / s / Hz / cm / sr
 		double abs_coeff = P_1 / gamma_1 * pow(x,-2) * FP2(x); // 1 / cm
 
-		AbsEm returnme(abs_coeff*L, em_coeff*pow(L,3)); // convert to units of 1 / L
+		AbsEm returnme(abs_coeff*L, em_coeff*L); // convert to units of L^-1, erg sr^-1 cm^-2 L^-1
 		return returnme;
 	}
 }
