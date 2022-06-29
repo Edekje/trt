@@ -28,6 +28,7 @@ namespace trt {
 
 	class Coordinate1D :  public Coordinate {
 		public: 
+			Coordinate1D(double T, double R);
 			double r;
 	};
 	

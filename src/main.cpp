@@ -11,11 +11,11 @@ int main(int argv, char** argc) {
 	// Load CLI & File Arguments into RTC:
 	RTC.loadArgs(argv, argc);
 	if( RTC.isset("-version")) {
-		std::cout << TRT_VERSION << std::endl;
+		std::cout << trt::TRT_VERSION << std::endl;
 		return 0;
 	}
 	if( RTC.isset("-h") || RTC.isset("--help") || RTC.size() == 0 ) {
-		std::cout << TRT_VERSION << "\n\n" << TRT_HELP << std::endl;
+		std::cout << trt::TRT_VERSION << "\n\n" << trt::TRT_HELP << std::endl;
 	}
 	if( RTC.isset("f") ) {
 		std::ifstream file(RTC.getString("f"));

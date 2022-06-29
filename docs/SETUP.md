@@ -5,3 +5,7 @@ To install VTK on Linux:
 
 - Follow the instructions in "Using a VTK release" under "Build VTK" from [this guide](https://gitlab.kitware.com/vtk/vtk/-/blob/master/Documentation/dev/getting_started_linux.md#using-a-vtk-release).
 - Make sure to verify your install by following the instructions under ["Verification"](https://gitlab.kitware.com/vtk/vtk/-/blob/master/Documentation/dev/getting_started_linux.md#verification).
+- Input the correct VTK directory into VTK\_DIR variable in the CMakeLists.txt file.
+
+# Compile `trt`
+In order to compile Teiresias Radiative Transfer, `cd build`, then `cmake ..`, then  `make main`. This will produce the project executable main.
