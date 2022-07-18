@@ -3,6 +3,8 @@
 #include <vtkXMLUnstructuredGridReader.h>
 #include <vtkCellData.h>
 #include <fstream>
+#include <algorithm>
+#include <math.h>
 
 #include <vtkPointData.h>
 namespace trt {
@@ -18,7 +20,7 @@ namespace trt {
 	/* read_Hydro1DSlice does what its name says.
 	 * it may return duplicate points, we just bring these along to our interpolator.
 	 */ 
-	void read_Hydro1DSlice(std::string filename, double* &r, HydroVar1D* &HV, int &length) {
+	void read_Hydro1DSlice(std::string filename, double* &r, HydroVar1D* &HV, int &length, double &rmin, double &rmax) {
 		// Initialise point reader
 		vtkNew<vtkXMLUnstructuredGridReader> reader;
 		reader->SetFileName(filename.c_str());
@@ -34,7 +36,7 @@ namespace trt {
 		// Locate upper and lower bounds of radius:
 		double bounds[6];
 		uG->GetBounds(bounds);
-		double rmin = bounds[0], rmax = bounds[1];
+		rmin = bounds[0], rmax = bounds[1];
 		// Allocate memory, including for boundary conditions on left & right
 		r = new double[length+2];
 		HV = new HydroVar1D[length+2];
@@ -47,10 +49,14 @@ namespace trt {
 			double p	 = pd->GetArray("p")->GetComponent(i-1, 0);
 			HV[i].e_th	= p;
 		}
+		r[0]=0;
+		HV[0]=HV[1];
+		// Needs taking care of: r[length+1] - goes unused
+		//std::cout << filename << ' ' << r[800] << ' ' << HV[400].rho << ' ' << length << std::endl;
 		// Check left- and right-boundaries are indeed valid:
-		if(rmin > r[1])
-			throw std::runtime_error("Minimum boundary value for r " + std::to_string(rmin) +
-									 " greater than first value: " + std::to_string(r[1]) + ".");
+		// pointless if(rmin > r[1])
+	//		throw std::runtime_error("Minimum boundary value for r " + std::to_string(rmin) +
+	//								 " greater than first value: " + std::to_string(r[1]) + ".");
 		if(rmax > r[length])
 			throw std::runtime_error("Maximum boundary value for r " + std::to_string(rmax) +
 									 " smaller than last value: " + std::to_string(r[length-1]) + ".");
@@ -77,12 +83,89 @@ namespace trt {
 			std::fstream itemp;
 			itemp.open(temp);
 			if(! itemp ) throw std::runtime_error("File " + temp + " does not exist.");
-			read_Hydro1DSlice(temp, r[i], slice[0], slice_len[0]);
+			read_Hydro1DSlice(temp, r[i], slice[i], slice_len[i], rmin, rmax);
 		}
 	}
 
+	HydroVar1D HydroSim1D::getHydroVar(Coordinate1D coord) {
+		if(coord.r > rmax) throw std::runtime_error("Radius r=" + std::to_string(coord.r) +
+									 " requested by getHydroVar is out of range: (r<" + std::to_string(rmax) + ").");
+		//std::cout << coord.r << ' ' << coord.t_lab << std::endl;
+		int slice1 = floor( (coord.t_lab - t_0) / timestep );
+		int slice2 = ceil( (coord.t_lab - t_0) / timestep );
+		if(slice1 < 0 || slice2 >= n_slices) throw std::runtime_error("T_lab=" + std::to_string(coord.t_lab) +
+									 " requested by getHydroVar is out of range: ("+std::to_string(t_0)+"<t<" + std::to_string(timestep*(n_slices-1)+t_0) + ").");
+		
+		auto interp1d = [](double f1, double f2, double x1, double x2, double x) {
+			return (f2-f1)/(x2-x1)*(x-x1) + f1;
+		};
+		
+		double deltat = fmod(coord.t_lab-t_0, timestep);
+		/*
+		if(coord.r < r) {
+			std::cout << "YAARG" << std::endl;
+			std::cout << "YAARG" << r[slice1][1] << ' ' << r[slice1][slice_len[slice1]] << std::endl;
+			std::cout << "YAARG" << r[slice2][1] << ' ' << r[slice2][slice_len[slice2]] << std::endl;
+			HydroVar1D HV1 = slice[slice1][1];
+			HydroVar1D HV2 = slice[slice2][1];
+			cout << HV1.rho << std::endl;
+			HydroVar1D returnme(interp1d(HV1.rho,HV2.rho, 0, timestep, deltat) ,
+								interp1d(HV1.e_th,HV2.e_th, 0, timestep, deltat) ,
+								interp1d(HV1.u1,HV2.u1, 0, timestep, deltat) );
+			return returnme;
+		}*/
+
+		//std::cout << slice1 << ' ' << slice2 << std::endl;
+		//std::cout << *r[slice1] << ' ' << slice_len[slice1] << ' ' << coord.r  << ' ' << std::endl;
+		int slice1rgreat = std::lower_bound(r[slice1], r[slice1] + slice_len[slice1] + 2, coord.r) - r[slice1];
+
+		int slice1rless = slice1rgreat - 1;
+		//std::cout << "JA" << std::endl;
+		int slice2rgreat = std::lower_bound(r[slice2], r[slice2] + slice_len[slice2] + 2, coord.r) - r[slice2];
+		int slice2rless = slice2rgreat - 1;
+		//std::cout << slice1rgreat << ' ' << slice2rgreat << std::endl;
+		
+		//std::cout << "S" << std::endl;
+
+		//std::cout <<  slice_len[slice1] << ' ' << slice_len[slice2] << std::endl;
+
+		HydroVar1D HV1L = slice[slice1][slice1rless];
+		//std::cout << "S" << std::endl;
+
+		HydroVar1D HV1G = slice[slice1][slice1rgreat];
+		//std::cout << "S" << std::endl;
+
+		HydroVar1D HV2L = slice[slice2][slice2rless];
+		//std::cout << "S" << std::endl;
+
+		HydroVar1D HV2G = slice[slice2][slice2rgreat];
+
+		//std::cout << "E" << std::endl;
+
+	/*	auto L = {HV1L, HV1G, HV2L, HV2G};
+			std::cout  << r[slice1][slice1rless] << ' ' << r[slice2][slice2rless] << std::endl;
+			std::cout  << r[slice1][slice1rgreat] << ' ' << r[slice2][slice2rgreat] << std::endl;
+
+		for(auto i : L) {
+			std::cout  << i.rho << ' ' << i.e_th << ' ' << i.u1 << std::endl;
+
+		}*/
+
+		auto interp2d = [&interp1d](double X1L, double X1R, double X2L, double X2R, double r1L, double r1R, double r2L, double r2R, double r, double t1, double t2, double t){
+				double one = interp1d(X1L, X1R, r1L, r1R, r);
+				double two = interp1d(X2L, X2R, r2L, r2R, r);
+				//std::cout << one << '_' << two << std::endl;
+				return interp1d(one, two, t1, t2, t);
+		};
+
+
+		HydroVar1D returnme(
+		interp2d(HV1L.rho, HV1G.rho, HV2L.rho, HV2G.rho, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, 0, timestep, deltat),
+		interp2d(HV1L.e_th, HV1G.e_th, HV2L.e_th, HV2G.e_th, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, 0, timestep, deltat ),
+		interp2d(HV1L.u1, HV1G.u1, HV2L.u1, HV2G.u1, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, 0, timestep, deltat ));
+
+		return returnme;
+
+	}
 }
 
-
-
-	

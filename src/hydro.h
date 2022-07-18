@@ -44,6 +44,7 @@ namespace trt {
 		int *slice_len;		// Array containing length of each spatial slice
 		double **r; 		// Array of pointers to radii of each spatial slice
 		HydroVar1D **slice; // Array of pointers to contents of each spatial slice
+		double rmin, rmax;
 
 		public:
 			HydroSim1D(std::string filename, int nslices, double timestep, double t_0=0, int slice_start=0);
