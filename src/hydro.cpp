@@ -29,7 +29,7 @@ namespace trt {
 		length = uG->GetNumberOfPoints();
 		vtkPointData* pd = uG->GetPointData();
 		// Check presence of required data arrays
-		std::string req_arrays[] = {"r", "rho", "u1", "p"};
+		std::string req_arrays[] = {"r", "rho", "u1", "p", "gammaeff"};
 		for( std::string s : req_arrays )
 			if( ! pd->HasArray(s.c_str()) )
 				throw std::runtime_error( s + " array missing from " + filename);
@@ -47,7 +47,8 @@ namespace trt {
 			HV[i].u1	= pd->GetArray("u1")->GetComponent(i-1, 0);
 			// Calculate e_th with pressure, rho & EOS:
 			double p	 = pd->GetArray("p")->GetComponent(i-1, 0);
-			HV[i].e_th	= p;
+			double gammaeff = pd->GetArray("gammaeff")->GetComponent(i-1,0);
+			HV[i].e_th	= p / ( gammaeff - 1);
 		}
 		r[0]=0;
 		HV[0]=HV[1];
@@ -115,7 +116,7 @@ namespace trt {
 			return returnme;
 		}*/
 
-		//std::cout << slice1 << ' ' << slice2 << std::endl;
+		// std::cout << slice1 << ' ' << slice2 << ' ' << deltat << std::endl;
 		//std::cout << *r[slice1] << ' ' << slice_len[slice1] << ' ' << coord.r  << ' ' << std::endl;
 		int slice1rgreat = std::lower_bound(r[slice1], r[slice1] + slice_len[slice1] + 2, coord.r) - r[slice1];
 

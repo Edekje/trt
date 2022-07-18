@@ -12,7 +12,8 @@ int main(int argv, char** argc) {
 	int n_slices = C.getInt("ns");
 	int start_slice = C.getInt("ss");
 	double start_time = C.getInt("ss");
-	trt::HydroSim1D X(filename, n_slices, 1.0, start_time, start_slice);
+	double timestep = ( C.isset("ts") ) ? C.getDouble("ts") : 1.0;
+	trt::HydroSim1D X(filename, n_slices, timestep, start_time, start_slice);
 	double t = C.getDouble("t"), r = C.getDouble("r");
 	trt::Coordinate1D coord(t, r);
 	try {
