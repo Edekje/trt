@@ -1,0 +1,4 @@
+rho: 4.0251509
+e_th: 0.14181711
+u1: 0.17849973
+1000000 evals of getHydroVar() took 272 ms.

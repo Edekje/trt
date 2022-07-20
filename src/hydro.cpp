@@ -32,7 +32,7 @@ namespace trt {
 		std::string req_arrays[] = {"r", "rho", "u1", "p", "gammaeff"};
 		for( std::string s : req_arrays )
 			if( ! pd->HasArray(s.c_str()) )
-				throw std::runtime_error( s + " array missing from " + filename);
+				throw std::runtime_error( s + " array missing from " + filename+" - make sure Bmpi (point data) is enabled in amrvac.par!");
 		// Locate upper and lower bounds of radius:
 		double bounds[6];
 		uG->GetBounds(bounds);
