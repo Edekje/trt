@@ -5,7 +5,7 @@ if [ "$#" -eq 1 ]; then # Case do all tests
   getnum="find . -type f -name '$1_out_*' | wc -l"
   numbers=$(eval $getnum)
   numbers=$(seq $numbers)
-elif [ "$#" -eq 2 ]; then # Case do specific te1st
+elif [ "$#" -ge 2 ]; then # Case do specific test
   numbers=$2
 else # Case incorrect input
   echo "Invalid input, exiting."
@@ -29,6 +29,17 @@ do
   #realoutput=$(${program} ${input})
   ${program} ${input} > ${temp}
   output=$(diff -q $outputname ${temp})
+  
+  # A third argument indicates we want the undiff'ed program output:
+  if [[ -n "$3" ]] ; then
+    echo " - INPUT:"
+    echo ${input}
+    echo ""
+    echo "OUTPUT:"
+    cat ${temp}
+    continue
+  fi
+
   if [[ ${output} = "" ]] ; then
     echo " - PASS"
   else
