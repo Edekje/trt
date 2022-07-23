@@ -47,25 +47,25 @@ namespace trt {
 
 	int Config::getInt(std::string key) {
 		auto it = (*this).find(key);
-		if( it==(*this).end() ) throw std::out_of_range("getInt: Key does not exist.");
+		if( it==(*this).end() ) throw std::out_of_range("getInt: Key \"-"+key+"\" does not exist.");
 		return std::stoi(it->second); // Apply conversion
 	}
 	
 	double Config::getDouble(std::string key) {
 		auto it = (*this).find(key);
-		if( it==(*this).end() ) throw std::out_of_range("getDouble: Key does not exist.");
+		if( it==(*this).end() ) throw std::out_of_range("getDouble: Key \"-"+key+"\" does not exist.");
 		return std::stod(it->second); // Apply conversion
 	}
 
 	std::string Config::getString(std::string key) {
 		auto it = (*this).find(key);
-		if( it==(*this).end() ) throw std::out_of_range("getString: Key does not exist.");
+		if( it==(*this).end() ) throw std::out_of_range("getString: Key \"-"+key+"\" does not exist.");
 		return it->second;
 	}
 
 	bool Config::getBool(std::string key) {
 		auto it = (*this).find(key);
-		if( it==(*this).end() ) throw std::out_of_range("getString: Key does not exist.");
+		if( it==(*this).end() ) throw std::out_of_range("getBool: Key \"-"+key+"\" does not exist.");
 		std::string val = it->second;
 		if(val=="1") return true;
 		else if(val=="0") return false;

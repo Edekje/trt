@@ -4,9 +4,14 @@
 #include <string>
 #include <functional>
 
+#include <beam.h>
+#include <coordinate.h>
+
 namespace trt {
+	/* necessary predeclarations */
 	class Microphysics;
 	class Beam1D;
+	class AbsEm;
 
 	/* Stores rest frame fluid rest-mass density and rest-frame thermal energy density:
 	 * thermal_energy = rest-frame_energy_density - rho = pressure / (GAMMA - 1)
@@ -20,24 +25,13 @@ namespace trt {
 			double rho, e_th;
 	};
 	
-	class HydroVar1D {
+	class HydroVar1D  : public HydroVar {
 		public:
 			HydroVar1D();
 			HydroVar1D(double R, double TH, double U1);
-			double rho, e_th, u1;
+			double u1;
 	};
-
-	class Coordinate {
-		public:
-			double t_lab;
-	};
-
-	class Coordinate1D :  public Coordinate {
-		public: 
-			Coordinate1D(double T, double R);
-			double r;
-	};
-	
+		
 	/* Stores internal representation of a 1D hydrodynamic simulation
 	 * read in .vtu format. filename gives the name and location of the 1st sim file.
 	 * e.g. sims/data0001.vtu. nslices gives the number of such files 'slices':
@@ -48,9 +42,9 @@ namespace trt {
 		int *slice_len;		// Array containing length of each spatial slice
 		double **r; 		// Array of pointers to radii of each spatial slice
 		HydroVar1D **slice; // Array of pointers to contents of each spatial slice
-		double rmin, rmax; // Defines data bounds (rmin unused)
 
 		public:
+			double rmin, rmax; // Defines data bounds (rmin unused)
 			HydroSim1D(std::string filename, int nslices, double timestep, double t_0=0, int slice_start=0);
 			HydroVar1D getHydroVar(Coordinate1D coord);
 			/* Bind Beam binds a Beam, Microphysics specification,
@@ -58,7 +52,7 @@ namespace trt {
 			 * which has the domain [beam.zmin,beam.zmax].
 			 * This may be integrated over by a preferred routine from
 			 * integrate.h */
-			//std::function<AbsEm (double)> BindBeam(Beam1D* beam, Microphysics MP);
+			std::function<AbsEm(double)> BindBeam(Beam1D* beam, Microphysics* MP, double nu);
 	};
 
 	

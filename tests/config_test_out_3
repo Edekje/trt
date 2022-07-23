@@ -4,7 +4,7 @@ I1:-1
 I2:stoi
 D1:1e+07
 D2:stod
-D3:getString: Key does not exist.
+D3:getDouble: Key "-D3" does not exist.
 S1:argg
 S2:33
 B1:1

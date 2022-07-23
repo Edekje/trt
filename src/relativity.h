@@ -10,7 +10,7 @@ namespace trt {
 	
 	/* Applies appropriate boosts to chi_nu', eta_nu' to lab/obs frame
 	 * values:
-	 * chi_nu, eta_nu = boostAbsEmToLab(Rest_chi_eta(nu'=nu/df, df) */
+	 * chi_nu, eta_nu = boostAbsEmToLab(Rest_chi_eta(nu'=nu/df), df) */
 	AbsEm boostAbsEmToLab(AbsEm InFluidRestFrame,
 								 double doppler_factor);
 }

@@ -48,7 +48,7 @@ namespace trt {
 		//Microphysics(Config& param);
 		/* Calculate fluid rest-frame absorption & emission
 		 * coefficients from fluid variables. */
-		AbsEm getAbsEm(double nu, HydroVar HV); // should be virtual... not compiling
+		virtual AbsEm getAbsEm(HydroVar HV, double nu) = 0; // should be virtual... not compiling
 	};
 	
 	/* Canonical Synchrotron (CS) Microphysics model,

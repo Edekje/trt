@@ -2,6 +2,7 @@
 #define TRT_BEAM_H
 
 #include <hydro.h>
+#include <coordinate.h>
 
 namespace trt {
 	

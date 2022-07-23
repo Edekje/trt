@@ -1,22 +1,23 @@
 #include <hydro.h>
 #include <microphysics.h>
-#include <vtkUnstructuredGrid.h>
-#include <vtkXMLUnstructuredGridReader.h>
-#include <vtkCellData.h>
+#include <relativity.h>
+
 #include <fstream>
 #include <algorithm>
 #include <math.h>
 
+#include <vtkUnstructuredGrid.h>
+#include <vtkXMLUnstructuredGridReader.h>
+#include <vtkCellData.h>
 #include <vtkPointData.h>
+
 namespace trt {
 	
 	HydroVar::HydroVar() = default;
 	HydroVar::HydroVar(double R, double TH) : rho{R}, e_th{TH} {}
 	
 	HydroVar1D::HydroVar1D() = default;
-	HydroVar1D::HydroVar1D(double R, double TH, double U1) : rho{R}, e_th{TH}, u1{U1} {}
-	
-	Coordinate1D::Coordinate1D(double T, double R) : Coordinate{T}, r{R} {}
+	HydroVar1D::HydroVar1D(double R, double TH, double U1) : HydroVar{R, TH}, u1{U1} {}
 	
 	/* read_Hydro1DSlice does what its name says.
 	 * it may return duplicate points, we just bring these along to our interpolator.
@@ -124,7 +125,19 @@ namespace trt {
 		interp2d(HV1L.u1, HV1G.u1, HV2L.u1, HV2G.u1, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, 0, timestep, deltat ));
 
 		return returnme;
-
+	}	
+		
+	std::function<AbsEm(double)> HydroSim1D::BindBeam(Beam1D* beam, Microphysics* MP, double nu) {
+		return [beam, MP, this, nu] (double z) {
+			Coordinate1D C = beam->operator()(z);
+			double cos_theta = z / C.r;
+			HydroVar1D rest_hydro_var = this->getHydroVar(C);
+			double df = doppler_factor(rest_hydro_var.u1, cos_theta);
+			double nu_prime = nu / df; // frequency in fluid frame.
+			
+		   return boostAbsEmToLab( MP->getAbsEm(rest_hydro_var, nu_prime), df);
+		};
 	}
+
 }
 
