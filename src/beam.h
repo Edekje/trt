@@ -9,8 +9,7 @@ namespace trt {
 		/* represents a collection of points corresponding to a light bean*/
 		public:
 		double t_obs;
-		virtual int size() = 0;
-		virtual Coordinate1D operator()(int i) = 0;
+		double z_min, z_max; // Range of continuous beam
 	};
 
 	class Beam1D : public Beam {
@@ -24,6 +23,7 @@ namespace trt {
 		Beam1D(double t_obs, double dx, double a, double t_labmin, double t_labmax, double rmax);
 		int size();
 		Coordinate1D operator()(int i);
+		Coordinate1D operator()(double z);
 	};
 }
 

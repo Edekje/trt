@@ -2,8 +2,12 @@
 #define TRT_HYDRO_H
 
 #include <string>
+#include <functional>
 
 namespace trt {
+	class Microphysics;
+	class Beam1D;
+
 	/* Stores rest frame fluid rest-mass density and rest-frame thermal energy density:
 	 * thermal_energy = rest-frame_energy_density - rho = pressure / (GAMMA - 1)
 	 * where GAMMA is the adiabatic index: GAMMA = 5/3 (non rel) 4/3 (rel)
@@ -49,7 +53,14 @@ namespace trt {
 		public:
 			HydroSim1D(std::string filename, int nslices, double timestep, double t_0=0, int slice_start=0);
 			HydroVar1D getHydroVar(Coordinate1D coord);
+			/* Bind Beam binds a Beam, Microphysics specification,
+			 * and this HydroSim together to produce a functor: double z -> AbsEm AE
+			 * which has the domain [beam.zmin,beam.zmax].
+			 * This may be integrated over by a preferred routine from
+			 * integrate.h */
+			//std::function<AbsEm (double)> BindBeam(Beam1D* beam, Microphysics MP);
 	};
+
 	
 }
 

@@ -1,4 +1,5 @@
 #include <hydro.h>
+#include <microphysics.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkXMLUnstructuredGridReader.h>
 #include <vtkCellData.h>
