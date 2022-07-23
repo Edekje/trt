@@ -14,8 +14,10 @@ namespace trt {
 		this->dt = dt;
 		this->a = a;
 		this->rmax = rmax;
-		n1 = std::ceil(std::fmax(t_labmin-t_obs,-std::sqrt(rmax*rmax-a*a))/dt);
-		n2 = std::floor(std::fmin(t_labmax-t_obs, std::sqrt(rmax*rmax-a*a))/dt);
+		zmin = std::fmax(t_labmin-t_obs,-std::sqrt(rmax*rmax-a*a));
+		zmax = std::fmin(t_labmax-t_obs, std::sqrt(rmax*rmax-a*a));
+		n1 = std::ceil(zmin/dt);
+		n2 = std::floor(zmax/dt);
 	}
 
 	int Beam1D::size() {
@@ -23,7 +25,12 @@ namespace trt {
 	}
 
 	Coordinate1D Beam1D::operator()(int i){
-		if( i < n1 or i > n2) throw std::runtime_error("Beam1D::operator() index " + std::to_string(i) + " is out of bounds.");
+		if( i < n1 or i > n2) throw std::runtime_error("Beam1D::operator(int i) index " + std::to_string(i) + " is out of bounds.");
 		return Coordinate1D(t_obs+i*dt, std::sqrt(a*a+std::pow(i*dt,2)));
+	}
+
+	Coordinate1D Beam1D::operator()(double z){
+		if( z < zmin or z > zmax) throw std::runtime_error("Beam1D::operator(double z) z = " + std::to_string(z) + " is out of bounds.");
+		return Coordinate1D(t_obs+z, std::sqrt(a*a+z*z));
 	}
 }

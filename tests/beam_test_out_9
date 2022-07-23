@@ -1,0 +1,2 @@
+-4.000000 4.000000
+Beam1D::operator(double z) z = 4.001000 is out of bounds.

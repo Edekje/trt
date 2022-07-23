@@ -9,7 +9,7 @@ namespace trt {
 		/* represents a collection of points corresponding to a light bean*/
 		public:
 		double t_obs;
-		double z_min, z_max; // Range of continuous beam
+		double zmin, zmax; // Range of continuous beam
 	};
 
 	class Beam1D : public Beam {

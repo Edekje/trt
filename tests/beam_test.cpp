@@ -17,6 +17,12 @@ int main(int argv, char** argc) {
 	try {
 		trt::Beam1D X (t_obs, dx, a, t_labmin, t_labmax, rmax);
 		
+		// Test continuous beam functionality:
+		if(C.isset("z")){
+		   	cout << std::fixed << X.zmin << ' ' << X.zmax << std::endl;
+		   	cout << std::fixed << X(C.getDouble("z")).t_lab << ' ' << X(C.getDouble("z")).r << std::endl;
+			return 0;
+		}
 		// test index error:
 		if(C.isset("n")) X(C.getInt("n"));
 		
