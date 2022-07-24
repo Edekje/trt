@@ -47,12 +47,6 @@ namespace trt {
 			double rmin, rmax; // Defines data bounds (rmin unused)
 			HydroSim1D(std::string filename, int nslices, double timestep, double t_0=0, int slice_start=0);
 			HydroVar1D getHydroVar(Coordinate1D coord);
-			/* Bind Beam binds a Beam, Microphysics specification,
-			 * and this HydroSim together to produce a functor: double z -> AbsEm AE
-			 * which has the domain [beam.zmin,beam.zmax].
-			 * This may be integrated over by a preferred routine from
-			 * integrate.h */
-			std::function<AbsEm(double)> BindBeam(Beam1D* beam, Microphysics* MP, double nu);
 	};
 
 	

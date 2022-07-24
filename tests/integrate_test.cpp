@@ -1,6 +1,8 @@
 #include <hydro.h>
 #include <microphysics.h>
 #include <config.h>
+#include <integrate.h>
+
 #include <iostream>
 #include <string>
 
@@ -28,7 +30,7 @@ int main(int argv, char** argc) {
 	
 	trt::CS_Microphysics MP(C);
 
-	auto BB = X.BindBeam(&B, &MP, nu);
+	auto BB = trt::BindBeam(&X, &B, &MP, nu);
 
 	cout << BB(z).abs << ' ' << BB(z).em << std::endl;
 }

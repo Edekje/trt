@@ -126,18 +126,6 @@ namespace trt {
 
 		return returnme;
 	}	
-		
-	std::function<AbsEm(double)> HydroSim1D::BindBeam(Beam1D* beam, Microphysics* MP, double nu) {
-		return [beam, MP, this, nu] (double z) {
-			Coordinate1D C = beam->operator()(z);
-			double cos_theta = z / C.r;
-			HydroVar1D rest_hydro_var = this->getHydroVar(C);
-			double df = doppler_factor(rest_hydro_var.u1, cos_theta);
-			double nu_prime = nu / df; // frequency in fluid frame.
-			
-		   return boostAbsEmToLab( MP->getAbsEm(rest_hydro_var, nu_prime), df);
-		};
-	}
 
 }
 

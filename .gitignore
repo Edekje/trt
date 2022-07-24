@@ -2,3 +2,4 @@
 *.swp
 CMake*
 *.cmake
+!CMakeLists.txt

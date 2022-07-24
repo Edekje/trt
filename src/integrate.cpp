@@ -7,6 +7,14 @@
 #include <microphysics.h>
 
 namespace trt {
+	/* The function:
+	 *
+	 * std::function<AbsEm(double)> BindBeam(auto* hydrosim, auto* beam, Microphysics* MP, double nu)
+	 *
+	 * is wholly declared & defined in integrate.h since the use of an auto function parameter
+	 * implicitly uses a template, which requires declaration and definiton to reside within the same
+	 * compilaton unit */
+	
 	/* Solves the equation of radiative transfer
 	  * dI/dx = eta - chi * I
 	  * along the "bound" beam getAbsEm from zmin until zmax,

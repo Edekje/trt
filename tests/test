@@ -1,7 +1,13 @@
 #!/bin/bash
 
 # Parse arguments
-if [ "$#" -eq 1 ]; then # Case do all tests
+if [ "$#" -eq 0 ]; then # Case do all tests
+  for testsrcfile in *_test.cpp ; do
+    ./test $(basename $testsrcfile .cpp)
+    echo ""
+  done
+  exit
+elif [ "$#" -eq 1 ]; then # Case do all tests for given executable
   getnum="find . -type f -name '$1_out_*' | wc -l"
   numbers=$(eval $getnum)
   numbers=$(seq $numbers)
