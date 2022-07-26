@@ -36,7 +36,7 @@ namespace trt {
 	  * and is sure to sample at z=0 (if in range).
 	  * uses GSU, future integration methods
 	  * will be defined in other functions/ */
-	double integrate_eort(std::function<AbsEm (double)> getAbsEm);
+	double integrate_eort(std::function<AbsEm (double)> getAbsEm, double zmin, double zmax, double I_0=0);
 }
 
 #endif

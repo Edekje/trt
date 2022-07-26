@@ -1,1 +1,1 @@
--fin data -ns 6 -ss 236 -dx 1 -tobs 239.334 -a 38.7 -z 0 -nu 1e9 -p 2.1 -e_e 0.1 -e_b 0.1 -f 1 -M 1.67e-24 -L 1
+-fin data -ns 6 -ss 236 -dx 1 -tobs 236.334 -a 38.7 -z 0 -nu 1e9 -p 2.1 -e_e 0.1 -e_b 0.1 -f 1 -M 1.67e-24 -L 1

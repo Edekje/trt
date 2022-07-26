@@ -27,10 +27,23 @@ int main(int argv, char** argc) {
 	trt::Beam1D B(t_obs, dx, a, start_time, start_time+timestep*(n_slices-1), X.rmax);
 	
 	cout << B.zmin << ' ' << B.zmax << std::endl;
+	trt::HydroVar1D HV = X.getHydroVar(B(0));
+	cout << HV.rho << ' ' << HV.e_th << std::endl;
 	
 	trt::CS_Microphysics MP(C);
 
 	auto BB = trt::BindBeam(&X, &B, &MP, nu);
 
 	cout << BB(z).abs << ' ' << BB(z).em << std::endl;
+
+	double I = trt::integrate_eort(BB, B.zmin, B.zmax);
+	
+	cout << I << std::endl;
+	cout << "a, I at t_obs = " << t_obs << std::endl;
+	for(int a = 0; a < 51; a++) {
+		trt::Beam1D B(t_obs, dx, a, start_time, start_time+timestep*(n_slices-1), X.rmax);
+		auto BB = trt::BindBeam(&X, &B, &MP, nu);
+		double I = trt::integrate_eort(BB, B.zmin+1e-6, B.zmax-1e-6);
+		cout << a << " , " << I << std::endl;
+	}
 }

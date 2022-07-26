@@ -46,6 +46,10 @@ if (NOT VTK_FOUND)
 endif()
 # ---- End Include VTK ---
 
+# ---- Include GSL ---
+find_package(GSL REQUIRED)
+# ---- Include GSL ---
+ 
 message("${CMAKE_BINARY_DIR}")
 message("${CMAKE_SOURCE_DIR}")
 message("${CMAKE_INCLUDE_PATH}")
@@ -60,7 +64,7 @@ set(CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response
 # MAIN TARGET
 add_executable(main ${MAIN_SOURCES})
 set(TARGETSNAMES main)
-target_link_libraries(main PRIVATE ${VTK_LIBRARIES})
+target_link_libraries(main PRIVATE ${VTK_LIBRARIES} ${GSL_LIBRARIES})
 
 # TEST TARGETS (src: https://stackoverflow.com/questions/14306642/adding-multiple-executables-in-cmake)
 file(GLOB TEST_SOURCE_FILES "${CMAKE_SOURCE_DIR}/tests/*.cpp")
@@ -69,7 +73,7 @@ foreach(SOURCE_PATH ${TEST_SOURCE_FILES})
     get_filename_component(EXECUTABLE_NAME ${SOURCE_PATH} NAME_WE)
     add_executable(${EXECUTABLE_NAME} ${SOURCE_PATH} ${SRC_FILES})
     set(TARGETSNAMES ${TARGETSNAMES} ${EXECUTABLE_NAME})
-    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${VTK_LIBRARIES})
+    target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${VTK_LIBRARIES} ${GSL_LIBRARIES})
 endforeach(SOURCE_PATH ${SOURCE_FILES})
 
 # vtk_module_autoinit is needed
