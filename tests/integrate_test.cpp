@@ -4,46 +4,47 @@
 #include <integrate.h>
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 
 using namespace std;
 
 int main(int argv, char** argc) {
+	// Load Args
 	trt::Config C;
 	C.loadArgs(argv, argc);
-	double nu    = C.getDouble("nu");
-	double a     = C.getDouble("a");
-	double t_obs = C.getDouble("tobs");
-	double z     = C.getDouble("z");
-	double dx    = C.getDouble("dx");
-	
+
+	// Parse Args
 	std::string filename = C.getString("fin");
 	int n_slices = C.getInt("ns");
+	double dx    = C.getDouble("dx");
+
 	int start_slice = C.getInt("ss");
 	double start_time = C.getInt("ss");
 	double timestep = ( C.isset("ts") ) ? C.getDouble("ts") : 1.0;
+	// Load hydro simulation & define microphysics
 	trt::HydroSim1D X(filename, n_slices, timestep, start_time, start_slice);
-
-	trt::Beam1D B(t_obs, dx, a, start_time, start_time+timestep*(n_slices-1), X.rmax);
-	
-	cout << B.zmin << ' ' << B.zmax << std::endl;
-	trt::HydroVar1D HV = X.getHydroVar(B(0));
-	cout << HV.rho << ' ' << HV.e_th << std::endl;
-	
 	trt::CS_Microphysics MP(C);
 
-	auto BB = trt::BindBeam(&X, &B, &MP, nu);
+	double t_obs, a, nu;
 
-	cout << BB(z).abs << ' ' << BB(z).em << std::endl;
+	cout << "Starting simulation, loaded " << n_slices << " slices!" << endl;
 
-	double I = trt::integrate_eort(BB, B.zmin, B.zmax);
-	
-	cout << I << std::endl;
-	cout << "a, I at t_obs = " << t_obs << std::endl;
-	for(int a = 0; a < 51; a++) {
+	while(true) {
+		// Get input t_obs, a, nu.
+//		if(cin.peek() == EOF|| cin.peek() == '\n') break;
+		cin >> t_obs;
+//		if(cin.peek() == EOF|| cin.peek() == '\n') break;
+		cin >> a;
+		if(cin.peek() == EOF|| cin.peek() == '\n') break;
+		cin >> nu;
+		// Calculate
 		trt::Beam1D B(t_obs, dx, a, start_time, start_time+timestep*(n_slices-1), X.rmax);
 		auto BB = trt::BindBeam(&X, &B, &MP, nu);
-		double I = trt::integrate_eort(BB, B.zmin+1e-6, B.zmax-1e-6);
-		cout << a << " , " << I << std::endl;
+		double I = trt::integrate_eort(BB, B.zmin, B.zmax, dx);
+		// Output
+		cout.precision(6);
+		cout << I << endl;
 	}
 }

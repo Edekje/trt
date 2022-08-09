@@ -54,7 +54,7 @@ namespace trt {
 	/* Canonical Synchrotron (CS) Microphysics model,
 	 * described in docs/microphysics.md. */
 	class CS_Microphysics : public Microphysics {
-		double p, e_e, e_b, f, M, L;
+		double p, e_e, e_b, electron_fraction, M, L;
 		FP_Fouka FP1, FP2;
 		public:
 		CS_Microphysics(Config& param);

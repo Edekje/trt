@@ -7,12 +7,16 @@
 - A beam datastructure.
 - Boosting of emission and absorption coefficients.
 
-## In progress:
-
+## Testing stage:
 - A beam integrator.
 
-## To-do:
+## Under development:
 - A set of beams datastructure.
 - An output module
-- A coherent mainfile.
+- A coherent mainfile:
+    - (t\_obs, a) grid mode
+    - Random points as input via std input.
+- pressure / rho cut-off value.
+
+## To-do:
 - Test whether Synge EOS gives sensible results

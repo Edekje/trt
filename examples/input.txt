@@ -1,0 +1,37 @@
+# Hydro simulation slices
+-inputname		input/data
+-slice_start_num	0
+-slice_stop_num		2001
+-slice_start_time	10
+-slice_timestep		0.1
+
+# Integrator settings
+-dz_min			0.1
+-precision		0.001
+-cutoff			0.00
+-maxradius		80
+
+# Observation grid
+-m
+-tobs_start		0
+-tobs_stop		1501
+-tobs_step		0.5
+
+-a_start		0
+-a_stop			51
+-a_step			0.2
+
+# Observational frequency
+-frequency		1.0e9
+
+# Microphysics parameters
+-p			2.16
+-e_e 			0.1
+-e_b			0.01
+-electron_fraction	1
+
+# Hydro simulation dimensions:
+# Density = 1 m_p cm^-3
+# Length = 1 light day
+-M			2.9082e22
+-L			2.592e15

@@ -2,6 +2,7 @@
 #include <ctype.h> // isdigit()
 #include <string> // string and stoi/stod
 #include <sstream> // string
+#include <stdexcept>
 
 namespace trt {
 
@@ -48,13 +49,21 @@ namespace trt {
 	int Config::getInt(std::string key) {
 		auto it = (*this).find(key);
 		if( it==(*this).end() ) throw std::out_of_range("getInt: Key \"-"+key+"\" does not exist.");
-		return std::stoi(it->second); // Apply conversion
+		try {
+			return std::stoi(it->second); // Apply conversion
+		} catch( std::invalid_argument &e ) {
+			throw std::invalid_argument("getInt: Key \"-"+key+"\" represents an invalid integer format.");
+		}
 	}
 	
 	double Config::getDouble(std::string key) {
 		auto it = (*this).find(key);
 		if( it==(*this).end() ) throw std::out_of_range("getDouble: Key \"-"+key+"\" does not exist.");
-		return std::stod(it->second); // Apply conversion
+		try {
+			return std::stod(it->second); // Apply conversion
+		} catch( std::invalid_argument &e ) {
+			throw std::invalid_argument("getDouble: Key \"-"+key+"\" represents an invalid floating-point number format.");
+		}
 	}
 
 	std::string Config::getString(std::string key) {
@@ -69,7 +78,7 @@ namespace trt {
 		std::string val = it->second;
 		if(val=="1") return true;
 		else if(val=="0") return false;
-		else throw std::invalid_argument("getBool: Parameter is not 1 or 0.");
+		else throw std::invalid_argument("getBool: Key \""+key+"\"must be either 0 or 1.");
 	}
 	
 }

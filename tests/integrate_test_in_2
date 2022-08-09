@@ -1,0 +1,1 @@
+-fin temp_integrate/data -ns 10 -ss 120 -dx 0.1 -p 2.16 -e_e 0.1 -e_b 1 -f 1 -M 2.9082e22 -L 2.592e15

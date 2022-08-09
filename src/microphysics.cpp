@@ -40,7 +40,7 @@ namespace trt {
 		p = param.getDouble("p");
 		e_e = param.getDouble("e_e");
 		e_b = param.getDouble("e_b");
-		f = param.getDouble("f");
+		electron_fraction = param.getDouble("electron_fraction");
 		M = param.getDouble("M");
 		L = param.getDouble("L");
 		FP_Fouka temp1(p), temp2(p+1);
@@ -52,10 +52,10 @@ namespace trt {
 		// B = c sqrt(8 pi rho*(gamma-1))
 		// rho (gamma-1) = e - rho = p / (adiabindex-1) = e_th
 		double gamma_pmin1 = HV.e_th / HV.rho;
-		double gamma_1 = (p-2)/(p-1) * M_PROTON / M_ELECTRON * e_e / f * gamma_pmin1; //gamma_m
+		double gamma_1 = (p-2)/(p-1) * M_PROTON / M_ELECTRON * e_e / electron_fraction * gamma_pmin1; //gamma_m
 		double B = C_LIGHT*sqrt(8*M_PI*e_b*HV.e_th * M * pow(L, -3) ); // B field in gauss
 		double nu_larmor = B*Q_ELECTRON/2.0/M_PI/M_ELECTRON/C_LIGHT;
-		double C = (p-1)*HV.rho*M*pow(L,-3)/M_PROTON/f; // gamma_1^(P-1) cancels w/ P_1 expr.
+		double C = (p-1)*HV.rho*M*pow(L,-3)/M_PROTON/electron_fraction; // gamma_1^(P-1) cancels w/ P_1 expr.
 		double P_1 = M_PI * sqrt(3)*pow(Q_ELECTRON, 2)*nu_larmor * C / C_LIGHT;
 		double nu_1 = 3.0/2.0*pow(gamma_1,2)*nu_larmor;
 		double x = nu / nu_1;
