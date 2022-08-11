@@ -30,10 +30,9 @@ namespace trt {
 			// If internal energy : density ratio is below cutoff, it is considered
 			// unshocked and non-radiating.
 			if(rest_hydro_var.e_th / rest_hydro_var.rho < cutoff) return AbsEm(1.0e-50,1.0e-50);
-			
+			// hacky fix;
 			// In the middle, no velocity - avoid divide by 0 in cos_theta -> set df 1.
-			double df = (coordinate.r != 0.0) ? doppler_factor(rest_hydro_var.u1, cos_theta) : 1;
-			if (df==1) std::cout << "WUUUT " << rest_hydro_var.rho << ' ' << rest_hydro_var.e_th << std::endl;
+			double df = (coordinate.r!=0) ? doppler_factor(rest_hydro_var.u1, cos_theta) : 1;
 			double nu_prime = nu / df; // frequency in fluid frame.
 			
 		   return boostAbsEmToLab( MP->getAbsEm(rest_hydro_var, nu_prime), df); };

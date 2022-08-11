@@ -106,8 +106,6 @@ int main(int argv, char** argc) {
 		
 		timer_begin = std::chrono::high_resolution_clock::now();
 		int beam_count = 0;
-		
-
 
 		//#pragma omp parallel for threads(n_threads)
 		for(double tobs = tobs_start; tobs < tobs_stop; tobs += tobs_step) {

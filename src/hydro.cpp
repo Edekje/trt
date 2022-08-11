@@ -99,6 +99,15 @@ namespace trt {
 		};
 		
 		double deltat = fmod(coord.t_lab-t_0, timestep);
+		
+		if(coord.r < rmin) { // hacky bug fix
+			HydroVar1D HV1 = slice[slice1][0];
+			HydroVar1D HV2 = slice[slice2][0];
+			HydroVar1D HV3(interp1d(HV1.rho, HV2.rho, 0, timestep, deltat),
+					       interp1d(HV1.e_th, HV2.e_th, 0, timestep, deltat),
+						   0);
+			return HV3;
+		}
 
 		int slice1rgreat = std::lower_bound(r[slice1], r[slice1] + slice_len[slice1], coord.r) - r[slice1];
 		int slice1rless = slice1rgreat - 1;
@@ -110,11 +119,11 @@ namespace trt {
 		HydroVar1D HV2L = slice[slice2][slice2rless];
 		HydroVar1D HV2G = slice[slice2][slice2rgreat];
 
-
 		auto interp2d = [&interp1d](double X1L, double X1R, double X2L, double X2R, double r1L, double r1R, double r2L, double r2R, double r, double t1, double t2, double t){
 				double one = interp1d(X1L, X1R, r1L, r1R, r);
 				double two = interp1d(X2L, X2R, r2L, r2R, r);
-				//std::cout << one << '_' << two << std::endl;
+				//std::cout << "r: " << r1L << ' ' << r1R << ' ' << r2L << ' ' << r2R << " " << r << std::endl;
+				//std::cout << one << ' ' << two << std::endl;
 				return interp1d(one, two, t1, t2, t);
 		};
 

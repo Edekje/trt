@@ -1,12 +1,12 @@
 # Hydro simulation slices
 -inputname		input/data
 -slice_start_num	0
--slice_stop_num		201
+-slice_stop_num		401
 -slice_start_time	10
 -slice_timestep		0.1
 
 # Integrator settings
--integrator		anavg
+-integrator		gsl
 -dz_min			0.01
 -dz_max			0.1
 -variation_threshold	0.04
@@ -17,11 +17,11 @@
 # Observation grid
 -m
 -tobs_start		10
--tobs_stop		10.1
+-tobs_stop		20.1
 -tobs_step		0.5
 
 -a_start		0
--a_stop			0.1
+-a_stop			50.1
 -a_step			0.5
 
 # Observational frequency

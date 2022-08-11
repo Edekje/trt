@@ -97,7 +97,7 @@ namespace trt {
 				zmid = (z1+z2)/2;
 			} else {
 				// Just propagate ahead.
-				std::cout << z1 << ' ' << z2 << ' ' << I1 << ' ' << AE1.em << ' ' << AE1.abs << std::endl;
+				//std::cout << z1 << ' ' << z2 << ' ' << I1 << ' ' << AE1.em << ' ' << AE1.abs << std::endl;
 				return step_f(I1, z1, z2, AE1, AE2);
 			}
 			// propagate other cases from z1 to mid and mid to z2.
@@ -111,8 +111,6 @@ namespace trt {
 			return AbsEm(optical_depth_2, I2);
 		};
 		// BEGIN RECURSION
-		std::cout << "BEGIN MIN " << getAbsEm(zmin).em << ' ' << getAbsEm(zmin).abs << std::endl;
-		std::cout << "BEGIN MAX " << getAbsEm(zmax).em << ' ' << getAbsEm(zmax).abs << std::endl;
 		return recurse(zmin, zmax, getAbsEm(zmin), getAbsEm(zmax), I_0);
 	}
 }
