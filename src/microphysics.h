@@ -9,6 +9,7 @@ namespace trt {
 	 * abs = 1/L, em = E/L/steradian  */
 	class AbsEm {
 		public:
+		AbsEm() : abs{0}, em{0} {}
 		AbsEm(double A, double E) : abs{A}, em{E} {}
 		double abs, em;
 	};

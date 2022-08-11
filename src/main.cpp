@@ -41,6 +41,9 @@ int main(int argv, char** argc) {
 	}
 	// Select radiative transfer mode: grid or point-input:
 	if( RTC.isset("m") ) {
+		// Threads
+		// int n_threads		= (RTC.isset("n_threads")) ? RTC.getInt("n_threads") : 1;
+		
 		// Frequency
 		double frequency = RTC.getDouble("frequency");
 
@@ -48,10 +51,19 @@ int main(int argv, char** argc) {
 		trt::CS_Microphysics MP(RTC);
 		
 		// Integrator settings
-		double dz_min			= ( RTC.isset("dz_min") ) ? RTC.getDouble("dz_min") : 1.0;
-		double precision		= ( RTC.isset("precision") ) ? RTC.getDouble("precision") : 0.01;
+		std::string integrator	= RTC.getString("integrator");
+		double dz_max = RTC.getDouble("dz_max");
 		double cutoff			= ( RTC.isset("cutoff") ) ? RTC.getDouble("cutoff") : 0.0;
-		
+		double precision, dz_min, variation_threshold;	
+		if(integrator=="gsl") {
+			precision		= RTC.getDouble("precision");
+		} else if(integrator=="anavg") {
+			dz_min			= RTC.getDouble("dz_min");
+			variation_threshold = RTC.getDouble("variation_threshold");
+		} else {
+			throw std::invalid_argument("invalid integration mode: "+integrator);
+		}
+
 		// Default mode grid:
 		double tobs_start = RTC.getDouble("tobs_start");
 		double tobs_stop  = RTC.getDouble("tobs_stop");
@@ -67,6 +79,8 @@ int main(int argv, char** argc) {
 		double slice_start_time	= RTC.getInt("slice_start_time");
 		double slice_timestep	= RTC.getDouble("slice_timestep");
 		auto timer_begin = std::chrono::high_resolution_clock::now();
+		
+		std::cerr << "Loading slices..." << std::endl;
 		trt::HydroSim1D HS(inputname, slice_stop_num-slice_start_num,
 						   slice_timestep, slice_start_time, slice_start_num);
 		auto timer_end = std::chrono::high_resolution_clock::now();
@@ -87,20 +101,32 @@ int main(int argv, char** argc) {
 		std::cout << "# mode: grid" << std::endl;
 		std::cout << "# tobs_start, tobs_stop, tobs_step, a_start, a_stop, a_step\n"
 					<< tobs_start << ", " << tobs_stop << ", " << tobs_step << ", " << a_start << ", " << a_stop << ", " << a_step << "\n";
-		std::cout << "# t_obs, a, frequency (Hz), I (erg cm^-2 s^-1 Hz^-1)" << std::endl;
+		std::cout << "# t_obs, a, frequency (Hz), optical depth, I (erg cm^-2 s^-1 Hz^-1)" << std::endl;
 		std::cout.precision(6);
 		
 		timer_begin = std::chrono::high_resolution_clock::now();
 		int beam_count = 0;
+		
 
+
+		//#pragma omp parallel for threads(n_threads)
 		for(double tobs = tobs_start; tobs < tobs_stop; tobs += tobs_step) {
 			for(double a = a_start; a < a_stop; a += a_step) {
 				beam_count++;
 				trt::Beam1D B(tobs, dz_min, a, slice_start_time,
 							  slice_start_time+slice_timestep*(slice_stop_num-slice_start_num-1), max_radius);
 				auto BB = trt::BindBeam(&HS, &B, &MP, frequency, cutoff);
-				double I = trt::integrate_eort(BB, B.zmin, B.zmax, dz_min, 0, precision);
-				std::cout << tobs << ", " << a << ", " << frequency << ", " << I << std::endl; 
+				
+				trt::AbsEm res;
+
+				if(integrator=="gsl") {
+					res.em = trt::integrate_eort(BB, B.zmin, B.zmax, dz_max, 0, precision);
+				} else if(integrator=="anavg") {
+					res = trt::integrate_eort_analytic(BB, B.zmin, B.zmax, dz_min, dz_max,
+							 variation_threshold, trt::step_avg_eort, 0);
+				}
+
+				std::cout << tobs << ", " << a << ", " << frequency << ", " << res.abs << ", " << res.em << std::endl; 
 			}
 		}
 		

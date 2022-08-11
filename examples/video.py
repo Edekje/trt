@@ -32,9 +32,12 @@ frequency = float(l[2])
 tobs = np.arange(tobs_start, tobs_stop, tobs_step)
 a = np.arange(a_start, a_stop, a_step)
 
-I = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[8:] ])
+I = np.array([ float(l[:-1].split(sep=', ')[4]) for l in lines[8:] ])
+tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[8:] ])
 I = I.reshape((len(tobs), len(a)))
-print(I.shape)
+tau = tau.reshape((len(tobs), len(a)))
+
+print(np.max(I))
 
 # --- CONFIGURE ANIMATION ---
 

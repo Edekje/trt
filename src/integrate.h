@@ -3,9 +3,12 @@
 
 #include <beam.h>
 #include <hydro.h>
-#include <functional>
 #include <microphysics.h>
 #include <relativity.h>
+
+#include <functional>
+#include <string>
+#include <iostream>
 
 namespace trt {
 	
@@ -24,12 +27,13 @@ namespace trt {
 			auto coordinate = beam->operator()(z);
 			double cos_theta = z / coordinate.r;
 			auto rest_hydro_var = hydrosim->getHydroVar(coordinate);
-			
 			// If internal energy : density ratio is below cutoff, it is considered
 			// unshocked and non-radiating.
 			if(rest_hydro_var.e_th / rest_hydro_var.rho < cutoff) return AbsEm(1.0e-50,1.0e-50);
 			
-			double df = doppler_factor(rest_hydro_var.u1, cos_theta);
+			// In the middle, no velocity - avoid divide by 0 in cos_theta -> set df 1.
+			double df = (coordinate.r != 0.0) ? doppler_factor(rest_hydro_var.u1, cos_theta) : 1;
+			if (df==1) std::cout << "WUUUT " << rest_hydro_var.rho << ' ' << rest_hydro_var.e_th << std::endl;
 			double nu_prime = nu / df; // frequency in fluid frame.
 			
 		   return boostAbsEmToLab( MP->getAbsEm(rest_hydro_var, nu_prime), df); };
@@ -39,9 +43,17 @@ namespace trt {
 	  * dI/dx = eta - chi * I
 	  * along the "bound" beam getAbsEm from zmin until zmax,
 	  * and is sure to sample at z=0 (if in range).
-	  * uses GSU, future integration methods
+	  * uses GSL, future integration methods
 	  * will be defined in other functions/ */
 	double integrate_eort(std::function<AbsEm (double)> getAbsEm, double zmin, double zmax, double dx, double I_0=0, double precision=0.001);
+	
+	/* Steps ahead from z1 to z2 by solving the eort for constant AbsEm,
+	 * averages AbsEm at z1 & 2 for this purpose. Returns specific
+	 * intensity (AbsEm.em), and optical thickness (AbsEm.abs) */
+	AbsEm step_avg_eort(double I1, double z1, double z2, AbsEm AE1, AbsEm AE2);
+
+	AbsEm integrate_eort_analytic(std::function<AbsEm (double)> getAbsEm, double zmin, double zmax, double dz_min, double dz_max, double variation_threshold, AbsEm (*step_f) (double, double, double, AbsEm, AbsEm), double I_0);
+
 }
 
 #endif
