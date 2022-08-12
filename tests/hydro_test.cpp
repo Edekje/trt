@@ -28,7 +28,7 @@ int main(int argv, char** argc) {
 		cout.precision(8);
 		cout << "rho: " << XX.rho << "\ne_th: " << XX.e_th << "\nu1: " << XX.u1 << endl;
 
-		if(N > 1) cout << N << " evals of getHydroVar() took " << std::chrono::duration_cast<std::chrono::milliseconds>(b-a).count() << " ms." << endl;
+		if(N > 1) cerr << "\n" << N << " evals of getHydroVar() took " << std::chrono::duration_cast<std::chrono::milliseconds>(b-a).count() << " ms." << endl;
 	} catch(const std::runtime_error& e) {
 		std::cout << e.what() << std::endl;
 	}

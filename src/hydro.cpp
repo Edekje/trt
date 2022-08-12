@@ -52,8 +52,9 @@ namespace trt {
 			double gammaeff = pd->GetArray("gammaeff")->GetComponent(i-1,0);
 			HV[i].e_th	= p / ( gammaeff - 1);
 		}
-		r[0]=0;
-		HV[0]=HV[1];
+		r[0]=-1e-100;
+		HV[0]=HV[1];  // center item has same prop as neighbour b.c.
+		HV[0].u1 = 0; // in the center no motion
 		// Check right-boundary are indeed valid:
 		if(rmax > r[length-1])
 			throw std::runtime_error("Maximum boundary value for r " + std::to_string(rmax) +
@@ -86,8 +87,8 @@ namespace trt {
 	}
 
 	HydroVar1D HydroSim1D::getHydroVar(Coordinate1D coord) {
-		if(coord.r > rmax) throw std::runtime_error("Radius r=" + std::to_string(coord.r) +
-									 " requested by getHydroVar is out of range: (r<" + std::to_string(rmax) + ").");
+		if(coord.r < 0 or coord.r > rmax) throw std::runtime_error("Radius r=" + std::to_string(coord.r) +
+									 " requested by getHydroVar is out of range: (0<r<" + std::to_string(rmax) + ").");
 
 		int slice1 = floor( (coord.t_lab - t_0) / timestep );
 		int slice2 = ceil( (coord.t_lab - t_0) / timestep );
@@ -99,15 +100,15 @@ namespace trt {
 		};
 		
 		double deltat = fmod(coord.t_lab-t_0, timestep);
-		
-		if(coord.r < rmin) { // hacky bug fix
+		/*	
+		if(coord.r < rmin) { // Explicitly handle case coord.r < rmin in case r[1]=0, as interpolation breaks at 0.
 			HydroVar1D HV1 = slice[slice1][0];
 			HydroVar1D HV2 = slice[slice2][0];
 			HydroVar1D HV3(interp1d(HV1.rho, HV2.rho, 0, timestep, deltat),
 					       interp1d(HV1.e_th, HV2.e_th, 0, timestep, deltat),
 						   0);
 			return HV3;
-		}
+		}*/
 
 		int slice1rgreat = std::lower_bound(r[slice1], r[slice1] + slice_len[slice1], coord.r) - r[slice1];
 		int slice1rless = slice1rgreat - 1;
