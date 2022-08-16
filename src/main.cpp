@@ -8,6 +8,7 @@
 #include <fstream>
 #include <sstream>
 #include <math.h>
+#include <vector>
 
 #include <chrono>
 
@@ -42,7 +43,8 @@ int main(int argv, char** argc) {
 	// Select radiative transfer mode: grid or point-input:
 	if( RTC.isset("m") ) {
 		// Threads
-		// int n_threads		= (RTC.isset("n_threads")) ? RTC.getInt("n_threads") : 1;
+		trt::N_THREADS = (RTC.isset("n_threads")) ? RTC.getInt("n_threads") : 1;
+		std::cerr << "TRT running on " << trt::N_THREADS << " threads." << std::endl;
 		
 		// Frequency
 		double frequency = RTC.getDouble("frequency");
@@ -104,33 +106,50 @@ int main(int argv, char** argc) {
 		std::cout << "# t_obs, a, frequency (Hz), optical depth, I (erg cm^-2 s^-1 Hz^-1)" << std::endl;
 		std::cout.precision(6);
 		
-		timer_begin = std::chrono::high_resolution_clock::now();
-		int beam_count = 0;
-
-		//#pragma omp parallel for threads(n_threads)
+		// Set up jobs queue
+		struct beam_job {
+			double tobs, a, frequency, tau, I;
+		};
+		std::vector<beam_job> beams;
 		for(double tobs = tobs_start; tobs < tobs_stop; tobs += tobs_step) {
 			for(double a = a_start; a < a_stop; a += a_step) {
-				beam_count++;
-				trt::Beam1D B(tobs, dz_min, a, slice_start_time,
-							  slice_start_time+slice_timestep*(slice_stop_num-slice_start_num-1), max_radius);
-				auto BB = trt::BindBeam(&HS, &B, &MP, frequency, cutoff);
-				
-				trt::AbsEm res;
-
-				if(integrator=="gsl") {
-					res.em = trt::integrate_eort(BB, B.zmin, B.zmax, dz_max, 0, precision);
-				} else if(integrator=="anavg") {
-					res = trt::integrate_eort_analytic(BB, B.zmin, B.zmax, dz_min, dz_max,
-							 variation_threshold, trt::step_avg_eort, 0);
-				}
-
-				std::cout << tobs << ", " << a << ", " << frequency << ", " << res.abs << ", " << res.em << std::endl; 
+				beam_job X;
+				X.tobs = tobs;
+				X.a = a;
+				X.frequency = frequency;
+				beams.push_back(X);
 			}
 		}
 		
+		// Perform jobs
+		timer_begin = std::chrono::high_resolution_clock::now();
+		#pragma omp parallel for num_threads(trt::N_THREADS)
+		for(unsigned int i = 0; i < beams.size(); i++){
+			trt::Beam1D B(beams[i].tobs, dz_min, beams[i].a, slice_start_time,
+						  slice_start_time+slice_timestep*(slice_stop_num-slice_start_num-1), max_radius);
+			auto BB = trt::BindBeam(&HS, &B, &MP, beams[i].frequency, cutoff);
+			
+			trt::AbsEm res;
+			if(integrator=="gsl") {
+				res.em = trt::integrate_eort(BB, B.zmin, B.zmax, dz_max, 0, precision);
+			} else if(integrator=="anavg") {
+				res = trt::integrate_eort_analytic(BB, B.zmin, B.zmax, dz_min, dz_max,
+						 variation_threshold, trt::step_avg_eort, 0);
+			}
+			beams[i].tau = res.abs;
+			beams[i].I   = res.em;
+		}
+		// Output jobs
+		for(unsigned int i = 0; i < beams.size(); i++){
+			std::cout << beams[i].tobs << ", " << beams[i].a << ", " << beams[i].frequency
+				      << ", " << beams[i].tau << ", " << beams[i].I << std::endl; 
+		}
+		// Summary
 		timer_end = std::chrono::high_resolution_clock::now();
 		std::cerr.precision(4);
-		std::cerr << "Computation completed. Integrated " << beam_count << " beams in " << std::chrono::duration_cast<std::chrono::milliseconds>(timer_end-timer_begin).count()*0.001 << "s." << std::endl;
+		std::cerr << "Computation completed. Integrated " << beams.size() << " beams in "
+			      << std::chrono::duration_cast<std::chrono::milliseconds>(timer_end-timer_begin).count()*0.001
+				  << "s." << std::endl;
 	}
 
 	return 0;

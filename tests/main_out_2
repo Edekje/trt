@@ -1,0 +1,16 @@
+TRT: Teiresias Radiative Transfer v0.01 - (c) Ethan van Woerkom (2022)
+
+ * Performs 1D/2D Relativistic Radiative Transfer on hydrodynamic  *
+ * simulations from the Black Hole Accretion Code (O. Porth, 2017).*
+
+   Takes arguments of form "-<key> <optional parameter to key>".
+
+	 Arguments:  	 Description: 
+	 -f <file>   	 Provide configuration file with additional
+	             	 arguments.
+	 --version   	 Display TRT version.
+	 -h / --help 	 Display this help message.
+
+	 Notes:
+
+ * This software has been released under the GNU LGPL 3.0 license. *

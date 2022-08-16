@@ -1,6 +1,7 @@
 #include <hydro.h>
 #include <microphysics.h>
 #include <relativity.h>
+#include <globals.h>
 
 #include <fstream>
 #include <algorithm>
@@ -26,7 +27,7 @@ namespace trt {
 		// Initialise point reader
 		vtkNew<vtkXMLUnstructuredGridReader> reader;
 		reader->SetFileName(filename.c_str());
-		reader->Update();
+		reader->Update(); // This costs 10-30ms to call, using >99% of execution time in this function.
 		vtkSmartPointer<vtkUnstructuredGrid> uG = reader->GetOutput();
 		length = uG->GetNumberOfPoints()+1;
 		vtkPointData* pd = uG->GetPointData();
@@ -43,16 +44,22 @@ namespace trt {
 		r = new double[length];
 		HV = new HydroVar1D[length];
 		// Read points
+		auto r_array      = pd->GetArray("r"),
+			 rho_array    = pd->GetArray("rho"),
+			 u1_array     = pd->GetArray("u1"),
+			 p_array      = pd->GetArray("p"),
+			 gammaeff_arr = pd->GetArray("gammaeff");
+
 		for(int i = 1; i < length; i++) {
-			r[i]		= pd->GetArray("r")->GetComponent(i-1, 0);
-			HV[i].rho	= pd->GetArray("rho")->GetComponent(i-1, 0);
-			HV[i].u1	= pd->GetArray("u1")->GetComponent(i-1, 0);
+			r[i]		= r_array->GetComponent(i-1, 0);
+			HV[i].rho	= rho_array->GetComponent(i-1, 0);
+			HV[i].u1	= u1_array->GetComponent(i-1, 0);
 			// Calculate e_th with pressure, rho & EOS:
-			double p	 = pd->GetArray("p")->GetComponent(i-1, 0);
-			double gammaeff = pd->GetArray("gammaeff")->GetComponent(i-1,0);
+			double p	 = p_array->GetComponent(i-1, 0);
+			double gammaeff = gammaeff_arr->GetComponent(i-1,0);
 			HV[i].e_th	= p / ( gammaeff - 1);
 		}
-		r[0]=-1e-100;
+		r[0]=-1e-100; // v. small negative value required so that interpolation does not break
 		HV[0]=HV[1];  // center item has same prop as neighbour b.c.
 		HV[0].u1 = 0; // in the center no motion
 		// Check right-boundary are indeed valid:
@@ -70,6 +77,7 @@ namespace trt {
 		this->r			= new double*[n_slices];
 		this->slice		= new HydroVar1D*[n_slices];
 
+		#pragma omp parallel for num_threads(trt::N_THREADS)
 		for(int i=0; i < n_slices; i++) {
 			constexpr int BF = 7; // supporting up to 999999 files, an obscene number.
 			char filenumbercstr[BF];
@@ -100,15 +108,6 @@ namespace trt {
 		};
 		
 		double deltat = fmod(coord.t_lab-t_0, timestep);
-		/*	
-		if(coord.r < rmin) { // Explicitly handle case coord.r < rmin in case r[1]=0, as interpolation breaks at 0.
-			HydroVar1D HV1 = slice[slice1][0];
-			HydroVar1D HV2 = slice[slice2][0];
-			HydroVar1D HV3(interp1d(HV1.rho, HV2.rho, 0, timestep, deltat),
-					       interp1d(HV1.e_th, HV2.e_th, 0, timestep, deltat),
-						   0);
-			return HV3;
-		}*/
 
 		int slice1rgreat = std::lower_bound(r[slice1], r[slice1] + slice_len[slice1], coord.r) - r[slice1];
 		int slice1rless = slice1rgreat - 1;

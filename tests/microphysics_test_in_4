@@ -1,1 +1,1 @@
--p 2.17 -e_b 0.22 -e_e 0.11 -f 0.9 -M 1.6726219e-24 -L 1 -rho 1.1 -pressure 1.1 -nu 1e8
+-p 2.17 -e_b 0.22 -e_e 0.11 -electron_fraction 0.9 -M 1.6726219e-24 -L 1 -rho 1.1 -pressure 1.1 -nu 1e8

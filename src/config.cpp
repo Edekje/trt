@@ -78,7 +78,7 @@ namespace trt {
 		std::string val = it->second;
 		if(val=="1") return true;
 		else if(val=="0") return false;
-		else throw std::invalid_argument("getBool: Key \""+key+"\"must be either 0 or 1.");
+		else throw std::invalid_argument("getBool: Key \""+key+"\" must be either 0 or 1.");
 	}
 	
 }

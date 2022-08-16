@@ -8,7 +8,7 @@ namespace trt {
 	extern const double M_ELECTRON;
 	extern const double M_PROTON;
 
-
+	extern int N_THREADS;
 
 	extern const char* TRT_VERSION;
 

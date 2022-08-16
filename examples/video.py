@@ -49,9 +49,11 @@ image_ax = axes[0]
 ax = axes[1]
 """
 fig = plt.figure()
-fig.set_size_inches(11.0,5)
-ax = fig.add_subplot(121)
-im_ax = fig.add_subplot(122, projection='polar')
+fig.set_size_inches(16.0,5)
+ax = fig.add_subplot(131)
+im_ax = fig.add_subplot(132, projection='polar')
+im_ax = fig.add_subplot(132, projection='polar')
+ax3 = fig.add_subplot(133)
 
 temp = I[~np.isnan(I)]
 Imin = np.min(temp)
@@ -81,6 +83,18 @@ ax.set_ylim(np.log(Imin)*1.05, np.log(Imax)*1.05)
 axtext = fig.add_axes([0.0, 0.95, 0.1, 0.05])
 axtext.axis('off')
 
+# FREQ PLOT
+
+F = np.trapz(I*a*2*np.pi, x=a, axis=1) # needs circular integration
+Fmin = np.min(F)
+Fmax=np.max(F)
+line3, = ax3.plot(tobs[0:], np.log(F[0:]))
+ax3.set_xlabel('$t_{obs}$ $\\rightarrow$')
+ax3.set_ylabel('log($F_{\\nu}$) $\\rightarrow$')
+ax3.set_ylim(np.min(tobs), np.max(tobs))
+ax3.set_ylim(np.log(Fmin), np.log(Fmax))
+ax.autoscale_view()
+
 # --- UPDATE FRAME ---
 
 def make_frame(i):
@@ -96,9 +110,11 @@ def make_frame(i):
 
     time = axtext.text(0.5, 0.5, str(i), ha='left', va='top')
     
+    line3.set_data(tobs[:i], np.log(F[:i]))
+    
     fig.canvas.draw()
 
-    return line, time, 
+    return line, line3, time, 
 
 # --- RUN ANIMATION ---
 

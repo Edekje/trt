@@ -7,7 +7,8 @@ namespace trt {
 	const double M_ELECTRON = 9.1093837015e-28;
 	const double M_PROTON   = 1.67262192369e-24;
 
-
+	// Number of threads used by OpenMP
+	int N_THREADS = 1;
 
 	const char* TRT_VERSION =
 	"TRT: Teiresias Radiative Transfer v0.01 - (c) Ethan van Woerkom (2022)";
