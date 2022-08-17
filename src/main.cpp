@@ -101,6 +101,7 @@ int main(int argv, char** argc) {
 					<< "# slice_start_num, slice_stop_num, slice_start_time, slice_timestep, max_radius\n"
 					<< slice_start_num << ", " << slice_stop_num << ", " << slice_start_time << ", " << slice_timestep << ", " << max_radius << "\n";
 		std::cout << "# mode: grid" << std::endl;
+		std::cout << "# cutoff\n" << cutoff << std::endl;
 		std::cout << "# tobs_start, tobs_stop, tobs_step, a_start, a_stop, a_step\n"
 					<< tobs_start << ", " << tobs_stop << ", " << tobs_step << ", " << a_start << ", " << a_stop << ", " << a_step << "\n";
 		std::cout << "# t_obs, a, frequency (Hz), optical depth, I (erg cm^-2 s^-1 Hz^-1)" << std::endl;

@@ -9,22 +9,22 @@
 -slice_timestep		0.1
 
 # Integrator settings
--integrator		gsl
+-integrator		anavg
 -dz_min			0.01
 -dz_max			0.1
--variation_threshold	0.04
+-variation_threshold	0.2
 -precision		0.001
--cutoff			0.00
+-cutoff			0.016
 -maxradius		80
 
 # Observation grid
 -m
--tobs_start		0
--tobs_stop		150.1
--tobs_step		0.5
+-tobs_start		10
+-tobs_stop		210.01
+-tobs_step		0.1
 
 -a_start		0
--a_stop			50.1
+-a_stop			60.1
 -a_step			0.2
 
 # Observational frequency
