@@ -58,7 +58,7 @@ namespace trt {
 		double delta_z = z2-z1;
 		// Case source function is infinite / no abs
 		if(avg.abs == 0)
-			return AbsEm(0, avg.em*delta_z);
+			return AbsEm(0, I1 + avg.em*delta_z);
 		// Case standard pencil beam solution
 		double optical_depth = avg.abs*delta_z;
 		double S = avg.em / avg. abs;

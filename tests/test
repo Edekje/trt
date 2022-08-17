@@ -27,7 +27,6 @@ echo ""
 
 for i in $numbers
 do
-  echo -n "Test No. $i"
   inputname="${name}_in_${i}"
   outputname="${name}_out_${i}"
   input=$(cat ${inputname})
@@ -46,6 +45,7 @@ do
     continue
   fi
 
+  echo -n "Test No. $i"
   if [[ ${output} = "" ]] ; then
     echo " - PASS"
   else

@@ -4,6 +4,9 @@ from matplotlib import colors
 import numpy as np
 import sys
 
+# minimum I / F value to be floored with:
+
+
 # --- READ INPUT ---
 
 lines = open(sys.argv[1], 'r').readlines()
@@ -32,7 +35,12 @@ frequency = float(l[2])
 tobs = np.arange(tobs_start, tobs_stop, tobs_step)
 a = np.arange(a_start, a_stop, a_step)
 
-I = np.array([ float(l[:-1].split(sep=', ')[4]) for l in lines[8:] ])
+I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[8:] ]
+minfloor = 1e-40
+temp = [x for x in I if x > minfloor] # weed out numbers below tiny thresh
+temp.sort()
+minfloor = temp[len(temp)*5//1000] # find out val of 0.5% lowest number
+I = np.array([ max(x,minfloor) for x in I])
 tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[8:] ])
 I = I.reshape((len(tobs), len(a)))
 tau = tau.reshape((len(tobs), len(a)))
@@ -75,11 +83,14 @@ fig.colorbar(h, label='$I_{\\nu}$')
 
 # GRAPH
 
-line, = ax.plot(a, np.log(I[0]))
+# line, = ax.plot(a, np.log(I[0]))
+line, = ax.plot(a, I[0])
+ax.set_yscale('log')
 ax.set_xlabel('a $\\rightarrow$')
 ax.set_ylabel('log($I$) $\\rightarrow$')
 ax.autoscale_view()
-ax.set_ylim(np.log(Imin)*1.05, np.log(Imax)*1.05)
+# ax.set_ylim(np.log(Imin)*1.05, np.log(Imax)*1.05)
+ax.set_ylim(Imin, Imax)
 axtext = fig.add_axes([0.0, 0.95, 0.1, 0.05])
 axtext.axis('off')
 
@@ -106,7 +117,8 @@ def make_frame(i):
     h.set_array(z.ravel())
 
     # Graph
-    line.set_data(a, np.log(I[i]))
+    line.set_data(a, I[i])
+    # line.set_data(a, np.log(I[i]))
 
     time = axtext.text(0.5, 0.5, str(i), ha='left', va='top')
     
