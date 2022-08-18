@@ -8,6 +8,8 @@ from sys import argv
 
 # --- PARAMETER SETTINGS ---
 
+timepersec = 2
+
 lines = open(sys.argv[1], 'r').readlines()
 if lines[4] != "# mode: grid\n":
     print("Incorrectly formatted input file.")
@@ -24,6 +26,7 @@ else:
 l = lines[3][:-1].split(sep=', ')
 slice_start_num = int(l[0])
 slice_stop_num = int(l[1])
+# slice_stop_num = 101 # temporary f/ debug
 slice_start_time = float(l[2])
 slice_timestep = float(l[3])
 max_radius = float(l[4])
@@ -31,6 +34,7 @@ max_radius = float(l[4])
 l = lines[8][:-1].split(sep=', ')
 tobs_start = float(l[0])
 tobs_stop = float(l[1])
+# tobs_stop = 20 # temporary f/ debug
 tobs_step = float(l[2])
 a_start = float(l[3])
 a_stop = float(l[4])
@@ -62,7 +66,7 @@ else:
 l = lines[10][:-1].split(sep=', ')
 frequency = float(l[2])
 
-I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[10:] ]
+I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[10:10+len(tobs)*len(a)] ]
 minfloor = 1e-40
 temp = [x for x in I if x > minfloor] # weed out numbers below tiny thresh
 temp.sort()
@@ -74,7 +78,7 @@ Inorm = 10**(-round(np.log10(Iavg)))
 #Inorm = 1e13 or set your own....
 
 I = np.array([ max(x,minfloor) for x in I])
-tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[10:] ])
+tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[10:10+len(tobs)*len(a)] ])
 I = I.reshape((len(tobs), len(a)))
 tau = tau.reshape((len(tobs), len(a)))
 
@@ -123,6 +127,7 @@ if graph_fluid_prop:
     line_2, = ax.plot(data[0].r,data[0].rho, label='$\\rho$')
     line_3, = ax.plot(data[0].r,data[0].u1, label='$u_{1}$')
     line_4, = ax.plot(data[0].r,data[0].e_th/data[0].rho, label='$e_{th}/\\rho$')
+    line_5, = ax.plot(data[0].r,data[0].p, label='$p$')
 
 ax.set_yscale('log')
 ax.set_xlabel('a $\\rightarrow$')
@@ -150,7 +155,10 @@ fig.legend()
 # fig.tight_layout()
 # --- UPDATE FRAME ---
 
+shocked_regions = []
+
 def make_frame(i):
+    global shocked_regions
     if i < 2:
         ax.relim()
         ax.autoscale_view()
@@ -162,20 +170,37 @@ def make_frame(i):
     line.set_data(a, I[i]*Inorm)
     line_2.set_data(data[i].r,data[i].rho)
     line_3.set_data(data[i].r,data[i].u1)
-    line_4.set_data(data[i].r,data[i].e_th/data[i].rho)
+    gammaf = data[i].e_th/data[i].rho
+    line_4.set_data(data[i].r,gammaf)
+    line_5.set_data(data[i].r,data[i].p)
     # line.set_data(a, np.log(I[i]))
 
     time = axtext.text(0.5, 0.5, "$I_{norm}=%.1e$, $t=%.2f$"%(Inorm, tobs[i]), ha='left', va='top')
     
     line3.set_data(tobs[:i], F[:i])
     
-    fig.canvas.draw()
+    # These must always be drawn:
+    standard = [line, line_2, line_3, line_4, line_5, line3, time]
+    # Remove shocked regions:
+    for reg in shocked_regions:
+        reg.remove()
+    shocked = False
+    shocked_regions = []
+    # Identify shocked regions
+    temp_gf = np.concatenate([[0],np.where(gammaf>shocked_cutoff, 1, 0),[0]])
+    boundaries = data[i].r[np.nonzero(temp_gf[1:]!=temp_gf[:-1])]
+    # Redraw shocked regions
+    for sta, sto in zip(boundaries[::2],boundaries[1::2]):
+        shocked_regions.append(ax.axvspan(sta,sto, alpha=0.1, color='red', zorder=-1)) # zorder=-1 -> draw behind
+    #fig.canvas.draw()
 
-    return line, line_2, line3, time, 
+    return standard+shocked_regions
 
 # --- RUN ANIMATION ---
 
-animation = animation.FuncAnimation(fig, make_frame, frames=frames, interval=100, blit=True, save_count=50)
+animation = animation.FuncAnimation(fig, make_frame, frames=frames, interval=tobs_step/timepersec*1000, blit=True, save_count=50)
 # interval is ms per frame
+
+#animation.save('video.mp4') # save video
 
 plt.show()
