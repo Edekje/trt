@@ -4,7 +4,8 @@
 # Hydro simulation slices
 -inputname		input/data
 -slice_start_num	0
--slice_stop_num		2001
+#-slice_stop_num		2001
+-slice_stop_num		201
 -slice_start_time	10
 -slice_timestep		0.1
 
@@ -20,7 +21,8 @@
 # Observation grid
 -m
 -tobs_start		10
--tobs_stop		210.01
+-tobs_stop		20.01
+#-tobs_stop		210.01
 -tobs_step		0.1
 
 -a_start		0
@@ -29,6 +31,7 @@
 
 # Observational frequency
 -frequency		1.0e9
+# Add extra frequencies like so: -frequency1, frequency2, ...
 
 # Microphysics parameters
 -p			2.16

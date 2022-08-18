@@ -31,7 +31,7 @@ slice_start_time = float(l[2])
 slice_timestep = float(l[3])
 max_radius = float(l[4])
 
-l = lines[8][:-1].split(sep=', ')
+l = lines[10][:-1].split(sep=', ')
 tobs_start = float(l[0])
 tobs_stop = float(l[1])
 # tobs_stop = 20 # temporary f/ debug
@@ -63,10 +63,11 @@ if tobs_step==slice_timestep and tobs_start==slice_start_time and len(slices)>=l
 else:
     graph_fluid_prop = False
 
-l = lines[10][:-1].split(sep=', ')
-frequency = float(l[2])
+l = lines[12][:-1].split(sep=', ')
+frequencies = [float(f) for f in lines[8][:-1].split(sep=', ')]
+frequency = frequencies[0]
 
-I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[10:10+len(tobs)*len(a)] ]
+I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[12:12+len(tobs)*len(a)] ]
 minfloor = 1e-40
 temp = [x for x in I if x > minfloor] # weed out numbers below tiny thresh
 temp.sort()
@@ -78,7 +79,7 @@ Inorm = 10**(-round(np.log10(Iavg)))
 #Inorm = 1e13 or set your own....
 
 I = np.array([ max(x,minfloor) for x in I])
-tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[10:10+len(tobs)*len(a)] ])
+tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[12:12+len(tobs)*len(a)] ])
 I = I.reshape((len(tobs), len(a)))
 tau = tau.reshape((len(tobs), len(a)))
 

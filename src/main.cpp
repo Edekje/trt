@@ -46,8 +46,12 @@ int main(int argv, char** argc) {
 		trt::N_THREADS = (RTC.isset("n_threads")) ? RTC.getInt("n_threads") : 1;
 		std::cerr << "TRT running on " << trt::N_THREADS << " threads." << std::endl;
 		
-		// Frequency
-		double frequency = RTC.getDouble("frequency");
+		// Get frequencies starting with frequency, frequency1, frequency2, frequency3...
+		std::vector<double> frequencies;
+		frequencies.push_back(RTC.getDouble("frequency"));
+		for(int i = 1; RTC.isset("frequency"+std::to_string(i)); i++) {
+			frequencies.push_back(RTC.getDouble("frequency"+std::to_string(i)));
+		}
 
 		// Microphysics
 		trt::CS_Microphysics MP(RTC);
@@ -102,6 +106,12 @@ int main(int argv, char** argc) {
 					<< slice_start_num << ", " << slice_stop_num << ", " << slice_start_time << ", " << slice_timestep << ", " << max_radius << "\n";
 		std::cout << "# mode: grid" << std::endl;
 		std::cout << "# cutoff\n" << cutoff << std::endl;
+		
+		std::cout << "# frequencies\n" << frequencies[0];
+		for(unsigned int i = 1; i < frequencies.size(); i++){
+			std::cout << ", " << frequencies[i];
+		} std::cout << std::endl;
+
 		std::cout << "# tobs_start, tobs_stop, tobs_step, a_start, a_stop, a_step\n"
 					<< tobs_start << ", " << tobs_stop << ", " << tobs_step << ", " << a_start << ", " << a_stop << ", " << a_step << "\n";
 		std::cout << "# t_obs, a, frequency (Hz), optical depth, I (erg cm^-2 s^-1 Hz^-1)" << std::endl;
@@ -112,13 +122,15 @@ int main(int argv, char** argc) {
 			double tobs, a, frequency, tau, I;
 		};
 		std::vector<beam_job> beams;
+		beam_job X;
 		for(double tobs = tobs_start; tobs < tobs_stop; tobs += tobs_step) {
+			X.tobs = tobs;
 			for(double a = a_start; a < a_stop; a += a_step) {
-				beam_job X;
-				X.tobs = tobs;
 				X.a = a;
-				X.frequency = frequency;
-				beams.push_back(X);
+				for(auto freq : frequencies) {
+					X.frequency = freq;
+					beams.push_back(X);
+				}
 			}
 		}
 		

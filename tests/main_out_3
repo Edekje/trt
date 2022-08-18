@@ -3,6 +3,10 @@
 # slice_start_num, slice_stop_num, slice_start_time, slice_timestep, max_radius
 0, 201, 10, 1, 80
 # mode: grid
+# cutoff
+0
+# frequencies
+1e+09
 # tobs_start, tobs_stop, tobs_step, a_start, a_stop, a_step
 10, 11.1, 0.5, 0, 1.6, 0.5
 # t_obs, a, frequency (Hz), optical depth, I (erg cm^-2 s^-1 Hz^-1)
