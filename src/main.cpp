@@ -41,7 +41,27 @@ int main(int argv, char** argc) {
 		RTC.loadArgs(argv, argc);
 	}
 	// Select radiative transfer mode: grid or point-input:
-	if( RTC.isset("m") ) {
+	if( RTC.isset("tgrid") || RTC.isset("tvar") ) {
+		// Load up times to observe at:
+		std::vector<double> tobs;
+		if(RTC.isset("tgrid")) {
+			double tobs_start = RTC.getDouble("tobs_start");
+			double tobs_stop  = RTC.getDouble("tobs_stop");
+			double tobs_step  = RTC.getDouble("tobs_step");
+			for(double t = tobs_start; t < tobs_stop; t += tobs_step) {
+				tobs.push_back(t);
+			}
+		} else { // RTC.isset("tvar")
+			std::cerr << "In -tvar mode. Please input t_obs to iterate over (use -tgrid for a fixed tobs grid), end input with 'q':  " << std::endl;
+			std::string t;  
+			std::cin >> t; // get tobs
+			// Read until there is no more input from cin
+			while(t != "q") {
+				tobs.push_back(std::stod(t));
+				std::cin >> t; // get tobs
+			}
+		}
+		if(tobs.size()==0) throw std::invalid_argument("No valid tobs to iterate over.");
 		// Threads
 		trt::N_THREADS = (RTC.isset("n_threads")) ? RTC.getInt("n_threads") : 1;
 		std::cerr << "TRT running on " << trt::N_THREADS << " threads." << std::endl;
@@ -71,9 +91,6 @@ int main(int argv, char** argc) {
 		}
 
 		// Default mode grid:
-		double tobs_start = RTC.getDouble("tobs_start");
-		double tobs_stop  = RTC.getDouble("tobs_stop");
-		double tobs_step  = RTC.getDouble("tobs_step");
 		double a_start    = RTC.getDouble("a_start");
 		double a_stop     = RTC.getDouble("a_stop");
 		double a_step     = RTC.getDouble("a_step");
@@ -111,9 +128,17 @@ int main(int argv, char** argc) {
 		for(unsigned int i = 1; i < frequencies.size(); i++){
 			std::cout << ", " << frequencies[i];
 		} std::cout << std::endl;
-
-		std::cout << "# tobs_start, tobs_stop, tobs_step, a_start, a_stop, a_step\n"
-					<< tobs_start << ", " << tobs_stop << ", " << tobs_step << ", " << a_start << ", " << a_stop << ", " << a_step << "\n";
+		if(RTC.isset("tgrid")) {
+			std::cout << "# tobs_start, tobs_stop, tobs_step\n"
+			<< RTC.getDouble("tobs_start") << ", " << RTC.getDouble("tobs_stop") << ", " << RTC.getDouble("tobs_step") << std::endl;
+		} else { // RTC.isset("tvar")
+			std::cout << "# tobs:\n";
+			std::cout << tobs[0];
+			for(unsigned int i = 1; i < tobs.size(); i++)
+				std::cout << ", " << tobs[i];
+			std::cout << std::endl;
+		}
+		std::cout << "# a_start, a_stop, a_step\n" << a_start << ", " << a_stop << ", " << a_step << "\n";
 		std::cout << "# t_obs, a, frequency (Hz), optical depth, I (erg cm^-2 s^-1 Hz^-1)" << std::endl;
 		std::cout.precision(6);
 		
@@ -123,11 +148,11 @@ int main(int argv, char** argc) {
 		};
 		std::vector<beam_job> beams;
 		beam_job X;
-		for(double tobs = tobs_start; tobs < tobs_stop; tobs += tobs_step) {
-			X.tobs = tobs;
+		for(double t : tobs) {
+			X.tobs = t;
 			for(double a = a_start; a < a_stop; a += a_step) {
 				X.a = a;
-				for(auto freq : frequencies) {
+				for(double freq : frequencies) {
 					X.frequency = freq;
 					beams.push_back(X);
 				}

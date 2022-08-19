@@ -36,9 +36,10 @@ tobs_start = float(l[0])
 tobs_stop = float(l[1])
 # tobs_stop = 20 # temporary f/ debug
 tobs_step = float(l[2])
-a_start = float(l[3])
-a_stop = float(l[4])
-a_step = float(l[5])
+l = lines[12][:-1].split(sep=', ')
+a_start = float(l[0])
+a_stop = float(l[1])
+a_step = float(l[2])
 
 tobs = np.arange(tobs_start, tobs_stop, tobs_step)
 a = np.arange(a_start, a_stop, a_step)
@@ -63,11 +64,11 @@ if tobs_step==slice_timestep and tobs_start==slice_start_time and len(slices)>=l
 else:
     graph_fluid_prop = False
 
-l = lines[12][:-1].split(sep=', ')
+l = lines[14][:-1].split(sep=', ')
 frequencies = [float(f) for f in lines[8][:-1].split(sep=', ')]
 frequency = frequencies[0]
 
-I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[12:12+len(tobs)*len(a)*len(frequencies)] ]
+I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[14:14+len(tobs)*len(a)*len(frequencies)] ]
 minfloor = 1e-40
 temp = [x for x in I if x > minfloor] # weed out numbers below tiny thresh
 temp.sort()
@@ -89,7 +90,7 @@ Inorm = 1/np.sqrt(Imin*Imax) # geom mean
 I_list = I.reshape((len(tobs), len(a), len(frequencies)))
 I = I_list[:,:,0]
 
-tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[12:12+len(tobs)*len(a)*len(frequencies)] ])
+tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[14:14+len(tobs)*len(a)*len(frequencies)] ])
 tau_list = tau.reshape((len(tobs), len(a), len(frequencies)))
 tau = tau_list[:,:,0]
 

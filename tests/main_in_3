@@ -15,7 +15,7 @@
 -maxradius		80
 
 # Observation grid
--m
+-tgrid
 -tobs_start		10
 -tobs_stop		11.1
 -tobs_step		0.5
