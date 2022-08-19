@@ -1,5 +1,5 @@
 # Requirements
-`trt` has been designed to use [VTK](https://vtk.org/) v9.2.0, as well as the GNU Scientific Library, [GSL 2.7.1.](https://www.gnu.org/software/gsl/) , building `trt` requires both VTK and GSL.
+`trt` has been designed to use [VTK](https://vtk.org/) v9.2.0, as well as the GNU Scientific Library, [GSL 2.7.1.](https://www.gnu.org/software/gsl/), and OpenMP. Building `trt` requires all three of VTK, GSL and OpenMP. OpenMP is supplied on most systems. In this document, we explain how to install VTK and GSL.
 
 `trt` has been developed for use in Linux, but should also be compileable in MS Windows & MacOS.
 

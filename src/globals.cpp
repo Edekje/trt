@@ -11,7 +11,7 @@ namespace trt {
 	int N_THREADS = 1;
 
 	const char* TRT_VERSION =
-	"TRT: Teiresias Radiative Transfer v0.01 - (c) Ethan van Woerkom (2022)";
+	"TRT: Teiresias Radiative Transfer v1.0 - (c) Ethan van Woerkom (2022)";
 
 	const char* TRT_HELP =
 	" * Performs 1D/2D Relativistic Radiative Transfer on hydrodynamic  *\n"
