@@ -31,6 +31,7 @@
 
 # Observational frequency
 -frequency		1.0e9
+-frequency1		1.0e8
 # Add extra frequencies like so: -frequency1, frequency2, ...
 
 # Microphysics parameters

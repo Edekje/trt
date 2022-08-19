@@ -67,21 +67,31 @@ l = lines[12][:-1].split(sep=', ')
 frequencies = [float(f) for f in lines[8][:-1].split(sep=', ')]
 frequency = frequencies[0]
 
-I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[12:12+len(tobs)*len(a)] ]
+I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[12:12+len(tobs)*len(a)*len(frequencies)] ]
 minfloor = 1e-40
 temp = [x for x in I if x > minfloor] # weed out numbers below tiny thresh
 temp.sort()
 minfloor = temp[len(temp)*5//1000] # find out val of 0.5% lowest number
 Iavg = np.average(temp)
 
-# For use in normalising the intensity graph:
-Inorm = 10**(-round(np.log10(Iavg)))
-#Inorm = 1e13 or set your own....
+
 
 I = np.array([ max(x,minfloor) for x in I])
-tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[12:12+len(tobs)*len(a)] ])
-I = I.reshape((len(tobs), len(a)))
-tau = tau.reshape((len(tobs), len(a)))
+
+temp = I[~np.isnan(I)]
+Imin = np.min(temp)
+Imax = np.max(temp)
+# For use in normalising the intensity graph:
+#Inorm = 10**(-round(np.log10(Iavg)))
+Inorm = 1/np.sqrt(Imin*Imax) # geom mean
+#Inorm = 1e13 or set your own....
+
+I_list = I.reshape((len(tobs), len(a), len(frequencies)))
+I = I_list[:,:,0]
+
+tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[12:12+len(tobs)*len(a)*len(frequencies)] ])
+tau_list = tau.reshape((len(tobs), len(a), len(frequencies)))
+tau = tau_list[:,:,0]
 
 print("Max optimal depth:", np.max(tau))
 
@@ -101,10 +111,6 @@ im_ax = fig.add_subplot(132, projection='polar')
 im_ax = fig.add_subplot(132, projection='polar')
 ax3 = fig.add_subplot(133)
 
-temp = I[~np.isnan(I)]
-Imin = np.min(temp)
-Imax = np.max(temp)
-
 # IMAGE
 
 colorscheme = 'hot'
@@ -122,7 +128,11 @@ fig.colorbar(h, label='$I_{\\nu}$', ax=ax3)
 
 # GRAPH
 
-line, = ax.plot(a, I[0]*Inorm, label='$I \cdot I_{norm}$')
+I_plots = []
+
+for i in range(len(frequencies)):
+    line, = ax.plot(a, I_list[0,:,i]*Inorm, label='$I \cdot I_{norm} \\nu=%.1e$'%(frequencies[i]))
+    I_plots.append(line)
 
 if graph_fluid_prop:
     line_2, = ax.plot(data[0].r,data[0].rho, label='$\\rho$')
@@ -136,15 +146,27 @@ ax.set_ylabel('A.U. $\\rightarrow$')
 ax.axhline(shocked_cutoff, label='Shocked Gas Cutoff', linestyle='--', color='k')
 ax.set_xlim(a[0], a[-1])
 ax.set_ylim(Imin*Inorm, Imax*Inorm)
-axtext = fig.add_axes([0.0, 0.95, 0.1, 0.05])
+axtext = fig.add_axes([0.0, 0.95, 0.35, 0.08])
 axtext.axis('off')
+time = axtext.text(0.5, 0.5, "$I_{norm}=%.1e$, $t=%.2f$"%(Inorm, tobs[0]), ha='left', va='top')
 
 # FREQ PLOT
 
-F = np.trapz(I*a*2*np.pi, x=a, axis=1) # needs circular integration
-Fmin = np.min(F)
-Fmax=np.max(F)
-line3, = ax3.plot(tobs[0:], F[0:])
+F_list = []
+
+for i in range(len(frequencies)):
+    F = np.trapz(I_list[:,:,i]*a*2*np.pi, x=a, axis=1) # needs circular integration
+    F_list.append(F)
+F_list = np.array(F_list)
+F = F_list[0]
+
+Fmin = np.min(F_list)
+Fmax=np.max(F_list)
+
+F_plots = []
+for i in range(len(frequencies)):
+    F_plots.append(ax3.plot(tobs[0:], F_list[i,0:], label='F $\\nu=%.1e$'%(frequencies[i]))[0])
+
 ax3.set_yscale('log')
 ax3.set_xlabel('a $\\rightarrow$')
 ax3.set_xlabel('$t_{obs}$ $\\rightarrow$')
@@ -168,34 +190,41 @@ def make_frame(i):
     h.set_array(z.ravel())
 
     # Graph
-    line.set_data(a, I[i]*Inorm)
-    line_2.set_data(data[i].r,data[i].rho)
-    line_3.set_data(data[i].r,data[i].u1)
-    gammaf = data[i].e_th/data[i].rho
-    line_4.set_data(data[i].r,gammaf)
-    line_5.set_data(data[i].r,data[i].p)
-    # line.set_data(a, np.log(I[i]))
-
-    time = axtext.text(0.5, 0.5, "$I_{norm}=%.1e$, $t=%.2f$"%(Inorm, tobs[i]), ha='left', va='top')
+    for j in range(len(frequencies)):
+        I_plots[j].set_data(a,I_list[i,:,j]*Inorm)
     
-    line3.set_data(tobs[:i], F[:i])
+    time.set_text("$I_{norm}=%.1e$, $t=%.2f$"%(Inorm, tobs[i]))
+    standard = [h, time]
+    
+    if graph_fluid_prop:
+        line_2.set_data(data[i].r,data[i].rho)
+        line_3.set_data(data[i].r,data[i].u1)
+        gammaf = data[i].e_th/data[i].rho
+        line_4.set_data(data[i].r,gammaf)
+        line_5.set_data(data[i].r,data[i].p)
+        # line.set_data(a, np.log(I[i]))
+        standard.extend([line_2, line_3, line_4, line_5])
+    
+    # Fluxes    
+    for j in range(len(frequencies)):
+        F_plots[j].set_data(tobs[:i], F_list[j,:i])
     
     # These must always be drawn:
-    standard = [line, line_2, line_3, line_4, line_5, line3, time]
-    # Remove shocked regions:
-    for reg in shocked_regions:
-        reg.remove()
-    shocked = False
-    shocked_regions = []
-    # Identify shocked regions
-    temp_gf = np.concatenate([[0],np.where(gammaf>shocked_cutoff, 1, 0),[0]])
-    boundaries = data[i].r[np.nonzero(temp_gf[1:]!=temp_gf[:-1])]
-    # Redraw shocked regions
-    for sta, sto in zip(boundaries[::2],boundaries[1::2]):
-        shocked_regions.append(ax.axvspan(sta,sto, alpha=0.1, color='red', zorder=-1)) # zorder=-1 -> draw behind
-    #fig.canvas.draw()
+    if graph_fluid_prop:
+        # Remove shocked regions:
+        for reg in shocked_regions:
+            reg.remove()
+        shocked = False
+        shocked_regions = []
+        # Identify shocked regions
+        temp_gf = np.concatenate([[0],np.where(gammaf>shocked_cutoff, 1, 0),[0]])
+        boundaries = data[i].r[np.nonzero(temp_gf[1:]!=temp_gf[:-1])]
+        # Redraw shocked regions
+        for sta, sto in zip(boundaries[::2],boundaries[1::2]):
+            shocked_regions.append(ax.axvspan(sta,sto, alpha=0.1, color='red', zorder=-1)) # zorder=-1 -> draw behind
+        #fig.canvas.draw()
 
-    return standard+shocked_regions
+    return standard+shocked_regions+F_plots+I_plots
 
 # --- RUN ANIMATION ---
 
