@@ -2,7 +2,7 @@
 
 ## Directions for Use:
     1. Compile as described in `docs/SETUP.md`
-    2. Copy file `examples/input.txt` and configure with required parameters, with -inputname referring to the location of your hydro simulation.
+    2. Copy file `examples/input.txt` and configure with required parameters, with -inputname referring to the location of your hydro simulation. Make sure you performed the BHAC hydro simulation with the setting convert_type = 'vtuBmpi' in &filelist in amrvac.par, to give point-based output.
     3. Possible modes are `-tobs`, with a fixed time grid, and `-tvar`, which requires input of observation time points.
     4. Run with `./main -f input.txt > <OUTPUT FILE NAME>`.
     5. The results of the relativistic radiative transfer simulation will have been written to the output file.

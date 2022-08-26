@@ -2,9 +2,8 @@
 # inputname: test_vtus/data
 # slice_start_num, slice_stop_num, slice_start_time, slice_timestep, max_radius
 0, 201, 10, 1, 80
-# mode: grid
-# cutoff
-0
+# cutoff, M, L
+0, 2.9082e+22, 2.592e+15
 # frequencies
 1e+09
 # tobs:

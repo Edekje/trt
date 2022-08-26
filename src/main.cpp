@@ -41,10 +41,10 @@ int main(int argv, char** argc) {
 		RTC.loadArgs(argv, argc);
 	}
 	// Select radiative transfer mode: grid or point-input:
-	if( RTC.isset("tgrid") || RTC.isset("tvar") ) {
+	if( (RTC.isset("tstep") || RTC.isset("tvar")) && (RTC.isset("astep") || RTC.isset("avar") ) ){
 		// Load up times to observe at:
 		std::vector<double> tobs;
-		if(RTC.isset("tgrid")) {
+		if(RTC.isset("tstep")) {
 			double tobs_start = RTC.getDouble("tobs_start");
 			double tobs_stop  = RTC.getDouble("tobs_stop");
 			double tobs_step  = RTC.getDouble("tobs_step");
@@ -61,7 +61,28 @@ int main(int argv, char** argc) {
 				std::cin >> t; // get tobs
 			}
 		}
-		if(tobs.size()==0) throw std::invalid_argument("No valid tobs to iterate over.");
+		if(tobs.size()==0) throw std::invalid_argument("No valid t_obs to iterate over.");
+		
+		std::vector<double> aobs;
+		if(RTC.isset("astep")) {
+			double aobs_start = RTC.getDouble("a_start");
+			double aobs_stop  = RTC.getDouble("a_stop");
+			double aobs_step  = RTC.getDouble("a_step");
+			for(double a = aobs_start; a < aobs_stop; a += aobs_step) {
+				aobs.push_back(a);
+			}
+		} else { // RTC.isset("avar")
+			std::cerr << "In -avar mode. Please input impact parameter a to iterate over (use -agrid for a fixed a grid), end input with 'q':  " << std::endl;
+			std::string a;  
+			std::cin >> a; // get tobs
+			// Read until there is no more input from cin
+			while(a != "q") {
+				aobs.push_back(std::stod(a));
+				std::cin >> a; // get tobs
+			}
+		}
+		if(aobs.size()==0) throw std::invalid_argument("No valid a to iterate over.");
+
 		// Threads
 		trt::N_THREADS = (RTC.isset("n_threads")) ? RTC.getInt("n_threads") : 1;
 		std::cerr << "TRT running on " << trt::N_THREADS << " threads." << std::endl;
@@ -90,11 +111,6 @@ int main(int argv, char** argc) {
 			throw std::invalid_argument("invalid integration mode: "+integrator);
 		}
 
-		// Default mode grid:
-		double a_start    = RTC.getDouble("a_start");
-		double a_stop     = RTC.getDouble("a_stop");
-		double a_step     = RTC.getDouble("a_step");
-		
 		// Load slices
 		std::string inputname	= RTC.getString("inputname");
 		int slice_start_num		= RTC.getInt("slice_start_num");
@@ -121,14 +137,13 @@ int main(int argv, char** argc) {
 					<< "# inputname: " << inputname << "\n"
 					<< "# slice_start_num, slice_stop_num, slice_start_time, slice_timestep, max_radius\n"
 					<< slice_start_num << ", " << slice_stop_num << ", " << slice_start_time << ", " << slice_timestep << ", " << max_radius << "\n";
-		std::cout << "# mode: grid" << std::endl;
-		std::cout << "# cutoff\n" << cutoff << std::endl;
+		std::cout << "# cutoff, M, L\n" << cutoff << ", " << RTC.getDouble("M") << ", " << RTC.getDouble("L") << std::endl;
 		
 		std::cout << "# frequencies\n" << frequencies[0];
 		for(unsigned int i = 1; i < frequencies.size(); i++){
 			std::cout << ", " << frequencies[i];
 		} std::cout << std::endl;
-		if(RTC.isset("tgrid")) {
+		if(RTC.isset("tstep")) {
 			std::cout << "# tobs_start, tobs_stop, tobs_step\n"
 			<< RTC.getDouble("tobs_start") << ", " << RTC.getDouble("tobs_stop") << ", " << RTC.getDouble("tobs_step") << std::endl;
 		} else { // RTC.isset("tvar")
@@ -138,7 +153,16 @@ int main(int argv, char** argc) {
 				std::cout << ", " << tobs[i];
 			std::cout << std::endl;
 		}
-		std::cout << "# a_start, a_stop, a_step\n" << a_start << ", " << a_stop << ", " << a_step << "\n";
+		if(RTC.isset("astep")) {
+			std::cout << "# a_start, a_stop, a_step\n"
+			<< RTC.getDouble("a_start") << ", " << RTC.getDouble("a_stop") << ", " << RTC.getDouble("a_step") << std::endl;
+		} else { // RTC.isset("avar")
+			std::cout << "# a:\n";
+			std::cout << aobs[0];
+			for(unsigned int i = 1; i < aobs.size(); i++)
+				std::cout << ", " << aobs[i];
+			std::cout << std::endl;
+		}
 		std::cout << "# t_obs, a, frequency (Hz), optical depth, I (erg cm^-2 s^-1 Hz^-1)" << std::endl;
 		std::cout.precision(6);
 		
@@ -150,7 +174,7 @@ int main(int argv, char** argc) {
 		beam_job X;
 		for(double t : tobs) {
 			X.tobs = t;
-			for(double a = a_start; a < a_stop; a += a_step) {
+			for(double a : aobs) {
 				X.a = a;
 				for(double freq : frequencies) {
 					X.frequency = freq;

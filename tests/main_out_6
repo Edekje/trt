@@ -6,10 +6,10 @@
 0, 2.9082e+22, 2.592e+15
 # frequencies
 1e+09
-# tobs_start, tobs_stop, tobs_step
-10, 11.1, 0.5
-# a_start, a_stop, a_step
-0, 1.6, 0.5
+# tobs:
+10, 10.5, 11
+# a:
+0, 0.5, 1, 1.5
 # t_obs, a, frequency (Hz), optical depth, I (erg cm^-2 s^-1 Hz^-1)
 10, 0, 1e+09, 4.47786e-12, 4.07167e-05
 10, 0.5, 1e+09, 3.20211e-12, 3.04645e-05

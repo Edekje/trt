@@ -17,6 +17,7 @@
 # Observation grid
 -tvar
 
+-astep
 -a_start		0
 -a_stop			1.6
 -a_step			0.5

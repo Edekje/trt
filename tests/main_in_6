@@ -15,15 +15,9 @@
 -maxradius		80
 
 # Observation grid
--tstep
--tobs_start		10
--tobs_stop		11.1
--tobs_step		0.5
+-tvar
 
--astep
--a_start		0
--a_stop			1.6
--a_step			0.5
+-avar
 
 # Observational frequency
 -frequency		1.0e9
