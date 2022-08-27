@@ -89,15 +89,14 @@ namespace trt {
 				// 0 must be sampled to check if point closes to origin is shocked
 				zmid = 0;
 			} else if( z1+dz_max < z2 ) {
-				// dz_max is the initial stepsize
-				zmid = z1 + dz_max;
+				// dz_max is the initial stepsize: no step shall be larger than that.
+				zmid = (z1+z2)/2; // reduce recursion depth
 			} else if( (rel_diff(AE1.abs, AE2.abs) > variation_threshold
 				   or  rel_diff(AE1.em, AE2.em) > variation_threshold) and z2-z1 >= dz_min) {
 				// If we have too much change, reduce stepsize, provided current stepsize exceeds minimum.
 				zmid = (z1+z2)/2;
 			} else {
 				// Just propagate ahead.
-				//std::cout << z1 << ' ' << z2 << ' ' << I1 << ' ' << AE1.em << ' ' << AE1.abs << std::endl;
 				return step_f(I1, z1, z2, AE1, AE2);
 			}
 			// propagate other cases from z1 to mid and mid to z2.
