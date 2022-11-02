@@ -28,7 +28,11 @@ namespace trt {
 	int f(double z, const double y[], double f[], void* params) {
 		auto getAbsEm = static_cast<std::function<AbsEm (double)>*>(params);
 		AbsEm AE = getAbsEm->operator()(z);
-		f[0] = AE.em - AE.abs*y[0];
+		if(AE.cutoff) {
+			f[0] = 0; // If cutoff, no contribution.
+		} else {
+			f[0] = AE.em - AE.abs*y[0]; // If above cutoff, does contribute.
+		}
 		return GSL_SUCCESS;
 	}
 	
@@ -54,6 +58,10 @@ namespace trt {
 	}
 	
 	AbsEm step_avg_eort(double I1, double z1, double z2, AbsEm AE1, AbsEm AE2){
+		// Apply cutoff -> set to zero:
+		if(AE1.cutoff) { AE1.em = 0; AE1.abs = 0; }
+		if(AE2.cutoff) { AE2.em = 0; AE2.abs = 0; }
+
 		AbsEm avg( (AE1.abs+AE2.abs)/2.0, (AE1.em+AE2.em)/2.0 );
 		double delta_z = z2-z1;
 		// Case source function is infinite / no abs
@@ -96,7 +104,7 @@ namespace trt {
 				// If we have too much change, reduce stepsize, provided current stepsize exceeds minimum.
 				zmid = (z1+z2)/2;
 			} else {
-				// Just propagate ahead.
+				// Just propagate ahead, end recursion.
 				return step_f(I1, z1, z2, AE1, AE2);
 			}
 			// propagate other cases from z1 to mid and mid to z2.

@@ -9,9 +9,15 @@ namespace trt {
 	 * abs = 1/L, em = E/L/steradian  */
 	class AbsEm {
 		public:
-		AbsEm() : abs{0}, em{0} {}
-		AbsEm(double A, double E) : abs{A}, em{E} {}
+		AbsEm() : abs{0}, em{0}, cutoff{false} {}
+		AbsEm(double A, double E) : abs{A}, em{E}, cutoff{false} {}
 		double abs, em;
+		bool cutoff;
+		/* cutoff=true indicates that quantity is below
+		 * 'cutoff' value, and thus 'cutoff',
+		 * that is, it will not be included in the integration.
+		 * AbsEm values are still passed on so as to track changing
+		 * quantities around shock. */
 	};
 
 	/* This class represents a function object for given power law p

@@ -8,18 +8,20 @@ from sys import argv
 
 # --- PARAMETER SETTINGS ---
 
-timepersec = 2
+blitinterval = 40
+
+UNIT=1e-6*1e-23
+UNITNAME='$\\mu$Jy'
 
 lines = open(sys.argv[1], 'r').readlines()
-if lines[4] != "# mode: grid\n":
-    print("Incorrectly formatted input file.")
-    exit()
 
-shocked_cutoff = float(lines[6][:-1].strip())
+shocked_cutoff = float(lines[5][:-1].split(sep=', ')[0])
 if len(argv)>=3:
     data_filename = argv[2]
 else:
     data_filename = lines[1][13:-1]
+
+distance = 40.4*1e6*3.086e18 # distance in Mpc
 
 # --- READ INPUT ---
 
@@ -30,22 +32,31 @@ slice_stop_num = int(l[1])
 slice_start_time = float(l[2])
 slice_timestep = float(l[3])
 max_radius = float(l[4])
+M = float(lines[5][:-1].split(sep=', ')[1])
+L = float(lines[5][:-1].split(sep=', ')[2])
 
-l = lines[10][:-1].split(sep=', ')
-tobs_start = float(l[0])
-tobs_stop = float(l[1])
-# tobs_stop = 20 # temporary f/ debug
-tobs_step = float(l[2])
-l = lines[12][:-1].split(sep=', ')
-a_start = float(l[0])
-a_stop = float(l[1])
-a_step = float(l[2])
+l = lines[9][:-1].split(sep=', ')
+if lines[8]!='# tobs:\n':
+    tobs_start = float(l[0])
+    tobs_stop = float(l[1])
+    # tobs_stop = 20 # temporary f/ debug
+    tobs_step = float(l[2])
+    tobs = np.arange(tobs_start, tobs_stop, tobs_step)
+else:
+    tobs = np.array([float(f) for f in l])
 
-tobs = np.arange(tobs_start, tobs_stop, tobs_step)
-a = np.arange(a_start, a_stop, a_step)
+l = lines[11][:-1].split(sep=', ')
+if lines[10]!='# a:\n':
+    a_start = float(l[0])
+    a_stop = float(l[1])
+    a_step = float(l[2])
+    a = np.arange(a_start, a_stop, a_step)
+else:
+    a = np.array([float(f) for f in l])
+
 slices= np.arange(slice_start_num, slice_stop_num)
 
-if tobs_step==slice_timestep and tobs_start==slice_start_time and len(slices)>=len(tobs):
+if lines[8]!='# tobs:\n' and tobs_step==slice_timestep and tobs_start==slice_start_time and len(slices)>=len(tobs):
     graph_fluid_prop = True
     data = []
     for i in slices:
@@ -64,17 +75,17 @@ if tobs_step==slice_timestep and tobs_start==slice_start_time and len(slices)>=l
 else:
     graph_fluid_prop = False
 
-l = lines[14][:-1].split(sep=', ')
-frequencies = [float(f) for f in lines[8][:-1].split(sep=', ')]
+l = lines[13][:-1].split(sep=', ')
+frequencies = [float(f) for f in lines[7][:-1].split(sep=', ')]
 frequency = frequencies[0]
 
-I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[14:14+len(tobs)*len(a)*len(frequencies)] ]
+I = [ float(l[:-1].split(sep=', ')[4]) for l in lines[13:13+len(tobs)*len(a)*len(frequencies)] ]
 minfloor = 1e-40
 temp = [x for x in I if x > minfloor] # weed out numbers below tiny thresh
 temp.sort()
 minfloor = temp[len(temp)*5//1000] # find out val of 0.5% lowest number
+minfloor = temp[len(temp)*0//1000] # find out val of 0.5% lowest number
 Iavg = np.average(temp)
-
 
 
 I = np.array([ max(x,minfloor) for x in I])
@@ -88,9 +99,13 @@ Inorm = 1/np.sqrt(Imin*Imax) # geom mean
 #Inorm = 1e13 or set your own....
 
 I_list = I.reshape((len(tobs), len(a), len(frequencies)))
+
+I_list = I_list[7:]
+tobs = tobs[7:]
+
 I = I_list[:,:,0]
 
-tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[14:14+len(tobs)*len(a)*len(frequencies)] ])
+tau = np.array([ float(l[:-1].split(sep=', ')[3]) for l in lines[13:13+len(tobs)*len(a)*len(frequencies)] ])
 tau_list = tau.reshape((len(tobs), len(a), len(frequencies)))
 tau = tau_list[:,:,0]
 
@@ -106,7 +121,7 @@ image_ax = axes[0]
 ax = axes[1]
 """
 fig = plt.figure()
-fig.set_size_inches(16.0,5)
+fig.set_size_inches(14.0,6)
 ax = fig.add_subplot(131)
 im_ax = fig.add_subplot(132, projection='polar')
 im_ax = fig.add_subplot(132, projection='polar')
@@ -132,7 +147,8 @@ fig.colorbar(h, label='$I_{\\nu}$', ax=ax3)
 I_plots = []
 
 for i in range(len(frequencies)):
-    line, = ax.plot(a, I_list[0,:,i]*Inorm, label='$I \cdot I_{norm} \\nu=%.1e$'%(frequencies[i]))
+#    line, = ax.plot(a, I_list[0,:,i]*Inorm, label='$I \cdot I_{norm} \\nu=%.1e$'%(frequencies[i]))
+    line, = ax.plot(a, I_list[0,:,i], label='$I \cdot I_{norm} \\nu=%.1e$'%(frequencies[i]))
     I_plots.append(line)
 
 if graph_fluid_prop:
@@ -143,8 +159,9 @@ if graph_fluid_prop:
 
 ax.set_yscale('log')
 ax.set_xlabel('a $\\rightarrow$')
-ax.set_ylabel('A.U. $\\rightarrow$')
-ax.axhline(shocked_cutoff, label='Shocked Gas Cutoff', linestyle='--', color='k')
+#ax.set_ylabel('A.U. $\\rightarrow$')
+ax.set_ylabel('$I_{\\nu}\\ \\rightarrow$')
+#ax.axhline(shocked_cutoff, label='Shocked Gas Cutoff', linestyle='--', color='k')
 ax.set_xlim(a[0], a[-1])
 ax.set_ylim(Imin*Inorm, Imax*Inorm)
 axtext = fig.add_axes([0.0, 0.95, 0.35, 0.08])
@@ -156,7 +173,14 @@ time = axtext.text(0.5, 0.5, "$I_{norm}=%.1e$, $t=%.2f$"%(Inorm, tobs[0]), ha='l
 F_list = []
 
 for i in range(len(frequencies)):
-    F = np.trapz(I_list[:,:,i]*a*2*np.pi, x=a, axis=1) # needs circular integration
+    # integrated specific intensity in one direction
+    F = np.trapz(I_list[:,:,i]*a*2*np.pi, x=a, axis=1)*L**2 # needs circular integration
+    # Total luminosity
+    F *= 4 * np.pi
+    # Flux
+    F /= 4 * np.pi * distance**2
+    # Unit
+    F /= UNIT
     F_list.append(F)
 F_list = np.array(F_list)
 F = F_list[0]
@@ -169,11 +193,14 @@ for i in range(len(frequencies)):
     F_plots.append(ax3.plot(tobs[0:], F_list[i,0:], label='F $\\nu=%.1e$'%(frequencies[i]))[0])
 
 ax3.set_yscale('log')
+ax3.set_xscale('log')
 ax3.set_xlabel('a $\\rightarrow$')
 ax3.set_xlabel('$t_{obs}$ $\\rightarrow$')
-ax3.set_ylabel('log($F_{\\nu}$) $\\rightarrow$')
-ax3.set_xlim(np.min(tobs), np.max(tobs))
-ax3.set_ylim(Fmin, Fmax)
+ax3.set_ylabel('$F_{\\nu}$ ('+UNITNAME+')        $\\rightarrow$')
+#ax3.set_xlim(np.min(tobs), np.max(tobs))
+ax3.set_xlim(30, np.max(tobs))
+#ax3.set_ylim(Fmin, Fmax)
+ax3.set_ylim(0.3, 200)
 fig.legend()
 
 # fig.tight_layout()
@@ -229,9 +256,9 @@ def make_frame(i):
 
 # --- RUN ANIMATION ---
 
-animation = animation.FuncAnimation(fig, make_frame, frames=frames, interval=tobs_step/timepersec*1000, blit=True, save_count=50)
+animation = animation.FuncAnimation(fig, make_frame, frames=frames, interval=blitinterval, blit=True, save_count=50)
 # interval is ms per frame
 
-#animation.save('video.mp4') # save video
+animation.save('PRESENT.mp4') # save video
 
 plt.show()

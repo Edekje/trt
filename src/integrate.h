@@ -27,15 +27,17 @@ namespace trt {
 			auto coordinate = beam->operator()(z);
 			double cos_theta = z / coordinate.r;
 			auto rest_hydro_var = hydrosim->getHydroVar(coordinate);
-			// If internal energy : density ratio is below cutoff, it is considered
-			// unshocked and non-radiating.
-			if(rest_hydro_var.e_th / rest_hydro_var.rho < cutoff) return AbsEm(0,0);
 			// hacky fix;
 			// In the middle, no velocity - avoid divide by 0 in cos_theta -> set df 1.
 			double df = (coordinate.r!=0) ? doppler_factor(rest_hydro_var.u1, cos_theta) : 1;
 			double nu_prime = nu / df; // frequency in fluid frame.
+			AbsEm result = boostAbsEmToLab( MP->getAbsEm(rest_hydro_var, nu_prime), df);
+
+			// If internal energy : density ratio is below cutoff, it is considered
+			// unshocked and non-radiating.
+			if(rest_hydro_var.e_th / rest_hydro_var.rho < cutoff) result.cutoff = true;
 			
-		   return boostAbsEmToLab( MP->getAbsEm(rest_hydro_var, nu_prime), df); };
+			return result; };
 	}
 
 	/* Solves the equation of radiative transfer
