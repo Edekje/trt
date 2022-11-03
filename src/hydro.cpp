@@ -68,9 +68,11 @@ namespace trt {
 									 " greater than last value: " + std::to_string(r[length-2]) + ".");
 	}
 
-	HydroSim1D::HydroSim1D(std::string filename, int n_slices, double timestep, double t_0, int slice_start){
+	HydroSim1D::HydroSim1D(std::string filename, int n_slices, double timestep, double t_0, int slice_start,
+						   std::string timestepmode){
 		this->t_0		= t_0;
 		// timestep is not strictly necessary, as vtu files also carry timestamps in a field.	
+		this->timestepmode = timestepmode;
 		this->timestep	= timestep;
 		this->n_slices	= n_slices;
 		this->slice_len = new int[n_slices];
@@ -97,18 +99,44 @@ namespace trt {
 	HydroVar1D HydroSim1D::getHydroVar(Coordinate1D coord) {
 		if(coord.r < 0 or coord.r > rmax) throw std::runtime_error("Radius r=" + std::to_string(coord.r) +
 									 " requested by getHydroVar is out of range: (0<r<" + std::to_string(rmax) + ").");
+		double fractional_slice;
+		double t1, t2;
+		int slice1, slice2;
+		if(timestepmode=="equal") {
+			fractional_slice = (coord.t_lab - t_0) / timestep;
+			slice1 = floor( fractional_slice );
+			slice2 = ceil( fractional_slice );
+			t1 = slice1*timestep + t_0;
+			t2 = slice2*timestep + t_0;
+			if(slice1 < 0 || slice2 >= n_slices)
+				throw std::runtime_error("T_lab=" + std::to_string(coord.t_lab) +
+				" requested by getHydroVar is out of range: ("+std::to_string(t_0)
+				+"<t<" + std::to_string(timestep*(n_slices-1)+t_0) + ").");
+		} else if (timestepmode=="log") {
+			if(coord.t_lab < t_0) 
+				throw std::runtime_error("T_lab=" + std::to_string(coord.t_lab) +
+				" requested by getHydroVar is out of range: ("+std::to_string(t_0)
+				+"<t<" + std::to_string(exp(timestep*(n_slices-1))*t_0) + ").");
+			fractional_slice = log(coord.t_lab / t_0) / timestep; // BUG WILL CRASH FOR NEGATIVE TIME.
+			slice1 = floor( fractional_slice );
+			slice2 = ceil( fractional_slice );
+			t1 = exp(slice1*timestep)*t_0;
+			t2 = exp(slice2*timestep)*t_0;
+			if(slice1 < 0 || slice2 >= n_slices)
+				throw std::runtime_error("T_lab=" + std::to_string(coord.t_lab) +
+				" requested by getHydroVar is out of range: ("+std::to_string(t_0)
+				+"<t<" + std::to_string(exp(timestep*(n_slices-1))*t_0) + ").");
+		} else {
+			throw std::runtime_error("Invalid timestepmode: '"+timestepmode+"' - it must be either 'equal' or 'log'.");
+		}
 
-		int slice1 = floor( (coord.t_lab - t_0) / timestep );
-		int slice2 = ceil( (coord.t_lab - t_0) / timestep );
-		if(slice1 < 0 || slice2 >= n_slices) throw std::runtime_error("T_lab=" + std::to_string(coord.t_lab) +
-									 " requested by getHydroVar is out of range: ("+std::to_string(t_0)+"<t<" + std::to_string(timestep*(n_slices-1)+t_0) + ").");
-		
 		auto interp1d = [](double f1, double f2, double x1, double x2, double x) {
-			return (f2-f1)/(x2-x1)*(x-x1) + f1;
+			if(x1 != x2)
+				return (f2-f1)/(x2-x1)*(x-x1) + f1;
+			else
+				return f1;
 		};
 		
-		double deltat = fmod(coord.t_lab-t_0, timestep);
-
 		int slice1rgreat = std::lower_bound(r[slice1], r[slice1] + slice_len[slice1], coord.r) - r[slice1];
 		int slice1rless = slice1rgreat - 1;
 		int slice2rgreat = std::lower_bound(r[slice2], r[slice2] + slice_len[slice2], coord.r) - r[slice2];
@@ -129,9 +157,9 @@ namespace trt {
 
 
 		HydroVar1D returnme(
-		interp2d(HV1L.rho, HV1G.rho, HV2L.rho, HV2G.rho, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, 0, timestep, deltat),
-		interp2d(HV1L.e_th, HV1G.e_th, HV2L.e_th, HV2G.e_th, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, 0, timestep, deltat ),
-		interp2d(HV1L.u1, HV1G.u1, HV2L.u1, HV2G.u1, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, 0, timestep, deltat ));
+		interp2d(HV1L.rho, HV1G.rho, HV2L.rho, HV2G.rho, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, t1, t2, coord.t_lab),
+		interp2d(HV1L.e_th, HV1G.e_th, HV2L.e_th, HV2G.e_th, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, t1, t2, coord.t_lab),
+		interp2d(HV1L.u1, HV1G.u1, HV2L.u1, HV2G.u1, r[slice1][slice1rless], r[slice1][slice1rgreat], r[slice2][slice2rless], r[slice2][slice2rgreat], coord.r, t1, t2, coord.t_lab));
 
 		return returnme;
 	}	

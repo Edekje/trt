@@ -117,11 +117,12 @@ int main(int argv, char** argc) {
 		int slice_stop_num		= RTC.getInt("slice_stop_num");
 		double slice_start_time	= RTC.getInt("slice_start_time");
 		double slice_timestep	= RTC.getDouble("slice_timestep");
+		std::string timestepmode= RTC.getString("slice_timestepmode");
 		auto timer_begin = std::chrono::high_resolution_clock::now();
 		
 		std::cerr << "Loading slices..." << std::endl;
 		trt::HydroSim1D HS(inputname, slice_stop_num-slice_start_num,
-						   slice_timestep, slice_start_time, slice_start_num);
+						   slice_timestep, slice_start_time, slice_start_num, timestepmode);
 		auto timer_end = std::chrono::high_resolution_clock::now();
 		std::cerr << "Loaded " << slice_stop_num-slice_start_num << " slices in " << std::chrono::duration_cast<std::chrono::milliseconds>(timer_end-timer_begin).count()*0.001 << "s." << std::endl;
 		
@@ -135,8 +136,8 @@ int main(int argv, char** argc) {
 		// Output description:
 		std::cout	<< "# teiresias radiative transfer output\n"
 					<< "# inputname: " << inputname << "\n"
-					<< "# slice_start_num, slice_stop_num, slice_start_time, slice_timestep, max_radius\n"
-					<< slice_start_num << ", " << slice_stop_num << ", " << slice_start_time << ", " << slice_timestep << ", " << max_radius << "\n";
+					<< "# slice_start_num, slice_stop_num, slice_start_time, slice_timestep, slice_timestepmode, max_radius\n"
+					<< slice_start_num << ", " << slice_stop_num << ", " << slice_start_time << ", " << slice_timestep << ", " << timestepmode << ", " << max_radius << "\n";
 		std::cout << "# cutoff, M, L\n" << cutoff << ", " << RTC.getDouble("M") << ", " << RTC.getDouble("L") << std::endl;
 		
 		std::cout << "# frequencies\n" << frequencies[0];

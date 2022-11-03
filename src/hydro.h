@@ -37,7 +37,9 @@ namespace trt {
 	 * e.g. sims/data0001.vtu. nslices gives the number of such files 'slices':
 	 * there will be files up to and including sims/data<nslices>.vtu, with appropriate 0 padding. */
 	class HydroSim1D {
-		double t_0, timestep;// The slices cover lab times [t_0, timestep*n_slices] inclusively.
+		std::string timestepmode; // "log", or "equal"
+		double t_0, timestep;// The slices cover lab times [t_0, timestep*(n_slices-1)] inclusively if mode "equal",
+		// if mode "log", they cover [t_0, t_0*exp(timestep*(n_slices-1))].
 		int n_slices; 		// Number of spatial slices
 		int *slice_len;		// Array containing length of each spatial slice
 		double **r; 		// Array of pointers to radii of each spatial slice
@@ -45,7 +47,7 @@ namespace trt {
 
 		public:
 			double rmin, rmax; // Defines data bounds (rmin unused)
-			HydroSim1D(std::string filename, int nslices, double timestep, double t_0=0, int slice_start=0);
+			HydroSim1D(std::string filename, int nslices, double timestep, double t_0=0, int slice_start=0, std::string timestepmode="equal");
 			HydroVar1D getHydroVar(Coordinate1D coord);
 	};
 
