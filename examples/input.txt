@@ -46,3 +46,4 @@
 # Length = 1 light day
 -M			2.9082e22
 -L			2.592e15
+-density_rescaling_factor 1.0

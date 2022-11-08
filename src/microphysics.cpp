@@ -37,12 +37,20 @@ namespace trt {
 	
 	CS_Microphysics::CS_Microphysics(Config& param) {
 		// Checks if following parameters are present & sets them or throws exception.
+		// Fundamental microphysics parameters
 		p = param.getDouble("p");
 		e_e = param.getDouble("e_e");
 		e_b = param.getDouble("e_b");
 		electron_fraction = param.getDouble("electron_fraction");
+		// Unit parameters
+		if(param.isset("density_rescaling_factor")){
+			density_rescaling_factor = param.getDouble("density_rescaling_factor");
+		} else {
+			density_rescaling_factor = 1.0;
+		}
 		M = param.getDouble("M");
-		L = param.getDouble("L");
+		L = param.getDouble("L")*pow(density_rescaling_factor, -1.0/3.0);
+		// Configure synchrotron variables
 		FP_Fouka temp1(p), temp2(p+1);
 		FP1 = temp1;
 		FP2 = temp2;

@@ -61,9 +61,13 @@ namespace trt {
 	/* Canonical Synchrotron (CS) Microphysics model,
 	 * described in docs/microphysics.md. */
 	class CS_Microphysics : public Microphysics {
+		// density_rescaled_factor scales L -> L * density_rescaling_factor^(-1/3) upon object initialisation.
+		// Thereby conserving mass, but changing the units in which time & space are measured.
+		// Thus the same grid and hydro input can be used for different computations.
 		double p, e_e, e_b, electron_fraction, M, L;
 		FP_Fouka FP1, FP2;
 		public:
+	   	double density_rescaling_factor;
 		CS_Microphysics(Config& param);
 		AbsEm getAbsEm(HydroVar HV, double nu);
 	};

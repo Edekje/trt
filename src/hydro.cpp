@@ -74,6 +74,13 @@ namespace trt {
 		// timestep is not strictly necessary, as vtu files also carry timestamps in a field.	
 		this->timestepmode = timestepmode;
 		this->timestep	= timestep;
+		if(timestepmode=="equal") {
+			this->tmax      = t_0 + timestep * (n_slices-1);
+		} else if(timestepmode=="log") {
+			this->tmax  = t_0 * exp(timestep*(n_slices-1));
+		} else {
+			throw std::runtime_error("Invalid timestepmode: '"+timestepmode+"' - it must be either 'equal' or 'log'.");
+		}
 		this->n_slices	= n_slices;
 		this->slice_len = new int[n_slices];
 		this->r			= new double*[n_slices];
