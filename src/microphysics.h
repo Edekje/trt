@@ -3,6 +3,7 @@
 
 #include <config.h> // class Config
 #include <hydro.h>	// class HydroVar
+#include <gsl/gsl_integration.h> // Romberg integration of FP
 
 namespace trt {
 	/* Absorption and Emission coefficients
@@ -40,12 +41,24 @@ namespace trt {
 	class FP_Fouka : public FP_Abstract {
 		double k_p, C_p;
 		double a1, a2, a3, b1;
+		gsl_integration_romberg_workspace* gsl_wspace;
+		int k;
+		char coeff;
 		public:
 		FP_Fouka() : k_p{0} , C_p{0} {};
-		FP_Fouka(double p);
+		FP_Fouka(double p, char coeff='e', int k=0);
+		~FP_Fouka();
+
 		double operator()(double x) const;
+		double angle_averaged(double x);
 	};
 	
+	class aa {
+		public:
+		double x;
+		FP_Fouka* FP;
+	};
+
 	class Microphysics {
 		public:
 		/* Initialises internal look-up data with given parameters
@@ -64,12 +77,14 @@ namespace trt {
 		// density_rescaled_factor scales L -> L * density_rescaling_factor^(-1/3) upon object initialisation.
 		// Thereby conserving mass, but changing the units in which time & space are measured.
 		// Thus the same grid and hydro input can be used for different computations.
-		double p, e_e, e_b, electron_fraction, M, L;
+		double p, e_e, /*e_b,*/ electron_fraction, M, L;
+		int k; // angle_averaging parameter: k==0 none, k>0 averages over 2^(k-1)+1 angles, 3-4 recommended.
 		FP_Fouka FP1, FP2;
 		public:
 	   	double density_rescaling_factor;
 		CS_Microphysics(Config& param);
 		AbsEm getAbsEm(HydroVar HV, double nu);
+		double e_b;
 	};
 }
 

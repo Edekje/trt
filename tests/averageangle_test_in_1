@@ -1,0 +1,1 @@
+-e_b 0.5 -e_e 1 -p 4 -nu 1e25 -electron_fraction 1 -M 2.9e22 -L 2.6e15 -e_th 0.3 -r 1 -k 4

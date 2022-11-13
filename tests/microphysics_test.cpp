@@ -40,7 +40,10 @@ int main(int argv, char** argc) {
 		trt::HydroVar HV(C.getDouble("rho"), e_th_cold(C.getDouble("rho"), C.getDouble("pressure")));
 		double nu = C.getDouble("nu");
 		trt::AbsEm AE = CSM.getAbsEm(HV, nu);
-		std::cout << "Abs: " << AE.abs << " Em: " << AE.em << '\n';
+		if(!C.isset("src"))
+			std::cout << "Abs: " << AE.abs << " Em: " << AE.em << '\n';
+		else
+			std::cout << "Source function: " << AE.em/AE.abs << '\n';
 		return 0;
 	}
 
