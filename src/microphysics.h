@@ -79,10 +79,12 @@ namespace trt {
 		// Thus the same grid and hydro input can be used for different computations.
 		double p, e_e, /*e_b,*/ electron_fraction, M, L;
 		int k; // angle_averaging parameter: k==0 none, k>0 averages over 2^(k-1)+1 angles, 3-4 recommended.
-		FP_Fouka FP1, FP2;
+		FP_Fouka* FP1;
+		FP_Fouka* FP2;
 		public:
 	   	double density_rescaling_factor;
 		CS_Microphysics(Config& param);
+		~CS_Microphysics();
 		AbsEm getAbsEm(HydroVar HV, double nu);
 		double e_b;
 	};

@@ -9,7 +9,6 @@
 #define CHECKSET(XXX) if(param.isset("XXX")) XXX = param.getDouble("XXX"); else throw std::invalid_argument("Necessary argument -XXX to CS_Microphysics is missing.")
 
 namespace trt {
-	
 	/* See eq. (6, 8, 22), (45)Fouka & Ouichaoui (2014):
      * https://ui.adsabs.harvard.edu/abs/2014MNRAS.442..979F/abstract */
 	FP_Fouka::FP_Fouka(double p, char coeff, int k) {
@@ -28,7 +27,9 @@ namespace trt {
 		}
 		// If angle_averaging, initialise workspace.
 		this->k = k;
-		if(k > 0) gsl_wspace = gsl_integration_romberg_alloc(k);
+		if(k > 0) {
+			gsl_wspace = gsl_integration_romberg_alloc(k);
+		}
 		const double // Constants for interpolation of a1/a2/a4/b1 constants for given p.
 		a10=-0.14602   ,a11= 3.62307e-2,a12=-5.76507e-3,a13= 3.46926e-4                ,
 		a20=-0.36648   ,a21= 0.18031   ,a22=-7.30773e-2,a23= 1.12484e-2,a24=-6.17683e-4,
@@ -45,9 +46,10 @@ namespace trt {
 		b1 = b10 + b11*p + b12*pow(p,2.0) + b13*pow(p,3.0)                 ;
 	}
 
-	trt::FP_Fouka::~FP_Fouka() {
-		if(k>0)
+	FP_Fouka::~FP_Fouka() {
+		if(k>0) {
 			gsl_integration_romberg_free(gsl_wspace);
+		}
 	}
 	
 	double gsl_em_angleaverage(double b, void* foo) {
@@ -90,9 +92,8 @@ namespace trt {
 		gsl_function F;
 		if(coeff=='a') F.function = gsl_abs_angleaverage;
 		else /*coeff=='e'*/ F.function = gsl_em_angleaverage;
-		F.params = (void*) new aa; // this need to be destroyed or stored or not 'new'
-		((aa*)(F.params))->x = x;
-		((aa*)(F.params))->FP = this;
+		aa tmp; tmp.x = x; tmp.FP = this;
+		F.params = &tmp;
 		gsl_integration_romberg(&F, 0, 1, 0, 0, &result, &neval, gsl_wspace);
 		return result;
 	}
@@ -121,8 +122,13 @@ namespace trt {
 		} else {
 			k = 0;
 		}
-		FP1 = *new FP_Fouka(p, 'e', k);
-		FP2 = *new FP_Fouka(p, 'a', k);
+		FP1 = new FP_Fouka(p, 'e', k);
+		FP2 = new FP_Fouka(p, 'a', k);
+	}
+
+	CS_Microphysics::~CS_Microphysics(){
+		delete FP1;
+		delete FP2;
 	}
 	
 	AbsEm CS_Microphysics::getAbsEm(HydroVar HV, double nu) {
@@ -139,11 +145,11 @@ namespace trt {
 		
 		double FP1_res, FP2_res;
 		if(k==0) {
-			FP1_res = FP1(x);
-			FP2_res = FP2(x);
+			FP1_res = (*FP1)(x);
+			FP2_res = (*FP2)(x);
 		} else { // case k > 0
-			FP1_res = FP1.angle_averaged(x);
-			FP2_res = FP2.angle_averaged(x);
+			FP1_res = (*FP1).angle_averaged(x);
+			FP2_res = (*FP2).angle_averaged(x);
 		}
 		double em_coeff = P_1 * FP1_res / 4.0 / M_PI; // in erg / s / Hz / cm / sr
 		// Previous expression for absorption coefficient had a massive error of many orders of magnitude

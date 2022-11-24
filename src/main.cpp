@@ -138,7 +138,7 @@ int main(int argv, char** argc) {
 					<< "# inputname: " << inputname << "\n"
 					<< "# slice_start_num, slice_stop_num, slice_start_time, slice_timestep, slice_timestepmode, max_radius\n"
 					<< slice_start_num << ", " << slice_stop_num << ", " << slice_start_time << ", " << slice_timestep << ", " << timestepmode << ", " << max_radius << "\n";
-		std::cout << "# cutoff, M, L, density_rescaling_factor\n" << cutoff << ", " << RTC.getDouble("M") << ", " << RTC.getDouble("L") << ", " << MP.density_rescaling_factor << std::endl;
+		std::cout << "# cutoff, M, L, density_rescaling_factor, angle_average_param\n" << cutoff << ", " << RTC.getDouble("M") << ", " << RTC.getDouble("L") << ", " << MP.density_rescaling_factor << ", " << ( (RTC.isset("angle_average_param")) ? 0 : RTC.getInt("angle_average_param")) << std::endl;
 		
 		std::cout << "# frequencies\n" << frequencies[0];
 		for(unsigned int i = 1; i < frequencies.size(); i++){
@@ -188,9 +188,10 @@ int main(int argv, char** argc) {
 		timer_begin = std::chrono::high_resolution_clock::now();
 		#pragma omp parallel for num_threads(trt::N_THREADS)
 		for(unsigned int i = 0; i < beams.size(); i++){
+			trt::CS_Microphysics MP2(RTC);
 			trt::Beam1D B(beams[i].tobs, dz_min, beams[i].a, slice_start_time,
 						  HS.tmax, max_radius);
-			auto BB = trt::BindBeam(&HS, &B, &MP, beams[i].frequency, cutoff);
+			auto BB = trt::BindBeam(&HS, &B, &MP2, beams[i].frequency, cutoff);
 			
 			trt::AbsEm res;
 			if(integrator=="gsl") {

@@ -40,6 +40,7 @@
 -e_e 			0.1
 -e_b			0.01
 -electron_fraction	1
+-angle_average_param	0 ! 0 is off, k>0 is evaluated at 2^(k-1)+1 points through romberg integration
 
 # Hydro simulation dimensions:
 # Density = 1 m_p cm^-3
