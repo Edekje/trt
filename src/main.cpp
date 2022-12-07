@@ -121,8 +121,10 @@ int main(int argv, char** argc) {
 		auto timer_begin = std::chrono::high_resolution_clock::now();
 		
 		std::cerr << "Loading slices..." << std::endl;
+		// Melani (2004) relativistic equation of state:
+		double GammaSynge = (RTC.isset("GammaSynge")) ? RTC.getDouble("GammaSynge") : 5.0/3.0;
 		trt::HydroSim1D HS(inputname, slice_stop_num-slice_start_num,
-						   slice_timestep, slice_start_time, slice_start_num, timestepmode);
+						   slice_timestep, slice_start_time, slice_start_num, timestepmode, GammaSynge);
 		auto timer_end = std::chrono::high_resolution_clock::now();
 		std::cerr << "Loaded " << slice_stop_num-slice_start_num << " slices in " << std::chrono::duration_cast<std::chrono::milliseconds>(timer_end-timer_begin).count()*0.001 << "s." << std::endl;
 		
@@ -136,8 +138,8 @@ int main(int argv, char** argc) {
 		// Output description:
 		std::cout	<< "# teiresias radiative transfer output\n"
 					<< "# inputname: " << inputname << "\n"
-					<< "# slice_start_num, slice_stop_num, slice_start_time, slice_timestep, slice_timestepmode, max_radius\n"
-					<< slice_start_num << ", " << slice_stop_num << ", " << slice_start_time << ", " << slice_timestep << ", " << timestepmode << ", " << max_radius << "\n";
+					<< "# slice_start_num, slice_stop_num, slice_start_time, slice_timestep, slice_timestepmode, max_radius, GammaSynge\n"
+					<< slice_start_num << ", " << slice_stop_num << ", " << slice_start_time << ", " << slice_timestep << ", " << timestepmode << ", " << max_radius << ", " << GammaSynge << "\n";
 		std::cout << "# cutoff, M, L, density_rescaling_factor, angle_average_param\n" << cutoff << ", " << RTC.getDouble("M") << ", " << RTC.getDouble("L") << ", " << MP.density_rescaling_factor << ", " << ( (RTC.isset("angle_average_param")) ? 0 : RTC.getInt("angle_average_param")) << std::endl;
 		
 		std::cout << "# frequencies\n" << frequencies[0];

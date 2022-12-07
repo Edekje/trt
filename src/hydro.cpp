@@ -20,10 +20,23 @@ namespace trt {
 	HydroVar1D::HydroVar1D() = default;
 	HydroVar1D::HydroVar1D(double R, double TH, double U1) : HydroVar{R, TH}, u1{U1} {}
 	
+	/* Inverts the BHAC Relativistic Generalised Synge EOS
+	 * from Melani et al. "Relativistic Parker winds with variable effective polytropic index" (2004)
+	 * to get the thermal energy density e_th. See eq. (13-17) thereof.  */
+	double BHAC_Synge_EOS(double rho, double p, double GammaSynge) {
+		if (rho <= 0) throw std::invalid_argument("BHAC_Synge_EOS: Invalid argument: rho = "+std::to_string(rho));
+		if (p <= 0) throw std::invalid_argument("BHAC_Synge_EOS: Invalid argument: p = "+std::to_string(rho));
+		if (GammaSynge <= 1) throw std::invalid_argument("BHAC_Synge_EOS: Invalid argument: GammaSynge = "+std::to_string(rho));
+		double a            = 2*p/rho/(GammaSynge-1);
+		double gamma_factor = (a+sqrt(4+pow(a,2)))/2;
+		double e_th         = (gamma_factor-1)*rho;
+		return e_th;
+	}
+	
 	/* read_Hydro1DSlice does what its name says.
 	 * it may return duplicate points, we just bring these along to our interpolator.
 	 */ 
-	void read_Hydro1DSlice(std::string filename, double* &r, HydroVar1D* &HV, int &length, double &rmin, double &rmax) {
+	void read_Hydro1DSlice(std::string filename, double* &r, HydroVar1D* &HV, int &length, double &rmin, double &rmax, double GammaSynge) {
 		// Initialise point reader
 		vtkNew<vtkXMLUnstructuredGridReader> reader;
 		reader->SetFileName(filename.c_str());
@@ -47,8 +60,8 @@ namespace trt {
 		auto r_array      = pd->GetArray("r"),
 			 rho_array    = pd->GetArray("rho"),
 			 u1_array     = pd->GetArray("u1"),
-			 p_array      = pd->GetArray("p"),
-			 gammaeff_arr = pd->GetArray("gammaeff");
+			 p_array      = pd->GetArray("p");
+			 // gammaeff_arr = pd->GetArray("gammaeff"); Deprecated, no longer necessary
 
 		for(int i = 1; i < length; i++) {
 			r[i]		= r_array->GetComponent(i-1, 0);
@@ -56,8 +69,8 @@ namespace trt {
 			HV[i].u1	= u1_array->GetComponent(i-1, 0);
 			// Calculate e_th with pressure, rho & EOS:
 			double p	 = p_array->GetComponent(i-1, 0);
-			double gammaeff = gammaeff_arr->GetComponent(i-1,0);
-			HV[i].e_th	= p / ( gammaeff - 1);
+			// double gammaeff = gammaeff_arr->GetComponent(i-1,0); Deprecated
+			HV[i].e_th	= BHAC_Synge_EOS(HV[i].rho, p, GammaSynge);
 		}
 		r[0]=-1e-100; // v. small negative value required so that interpolation does not break
 		HV[0]=HV[1];  // center item has same prop as neighbour b.c.
@@ -69,7 +82,7 @@ namespace trt {
 	}
 
 	HydroSim1D::HydroSim1D(std::string filename, int n_slices, double timestep, double t_0, int slice_start,
-						   std::string timestepmode){
+						   std::string timestepmode, double GammaSynge){
 		this->t_0		= t_0;
 		// timestep is not strictly necessary, as vtu files also carry timestamps in a field.	
 		this->timestepmode = timestepmode;
@@ -99,7 +112,7 @@ namespace trt {
 			std::fstream itemp;
 			itemp.open(temp);
 			if(! itemp ) throw std::runtime_error("File " + temp + " does not exist.");
-			read_Hydro1DSlice(temp, r[i], slice[i], slice_len[i], rmin, rmax);
+			read_Hydro1DSlice(temp, r[i], slice[i], slice_len[i], rmin, rmax, GammaSynge);
 		}
 	}
 

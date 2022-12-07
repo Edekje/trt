@@ -47,9 +47,13 @@ namespace trt {
 
 		public:
 			double rmin, rmax, tmax; // Defines data bounds (rmin unused)
-			HydroSim1D(std::string filename, int nslices, double timestep, double t_0=0, int slice_start=0, std::string timestepmode="equal");
+			HydroSim1D(std::string filename, int nslices, double timestep, double t_0=0, int slice_start=0, std::string timestepmode="equal", double GammaSynge=5.0/3.0);
 			HydroVar1D getHydroVar(Coordinate1D coord);
 	};
+	
+	double BHAC_Synge_EOS(double rho, double p, double GammaSynge);
+	
+	void read_Hydro1DSlice(std::string filename, double* &r, HydroVar1D* &HV, int &length, double &rmin, double &rmax, double GammaSynge);
 
 	
 }
