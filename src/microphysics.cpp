@@ -138,7 +138,7 @@ namespace trt {
 		double gamma_1 = (p-2)/(p-1) * M_PROTON / M_ELECTRON * e_e / electron_fraction * gamma_pmin1; //gamma_m
 		double B = C_LIGHT*sqrt(8*M_PI*e_b*HV.e_th * M * pow(L, -3) ); // B field in gauss
 		double nu_larmor = B*Q_ELECTRON/2.0/M_PI/M_ELECTRON/C_LIGHT;
-		double C = (p-1)*HV.rho*M*pow(L,-3)/M_PROTON/electron_fraction; // gamma_1^(P-1) cancels w/ P_1 expr.
+		double C = (p-1)*HV.rho*M*pow(L,-3)/M_PROTON*electron_fraction; // gamma_1^(P-1) cancels w/ P_1 expr.
 		double P_1 = M_PI * sqrt(3)*pow(Q_ELECTRON, 2)*nu_larmor * C / C_LIGHT;
 		double nu_1 = 3.0/2.0*pow(gamma_1,2)*nu_larmor;
 		double x = nu / nu_1;
