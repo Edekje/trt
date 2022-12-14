@@ -115,7 +115,7 @@ int main(int argv, char** argc) {
 		std::string inputname	= RTC.getString("inputname");
 		int slice_start_num		= RTC.getInt("slice_start_num");
 		int slice_stop_num		= RTC.getInt("slice_stop_num");
-		double slice_start_time	= RTC.getInt("slice_start_time");
+		double slice_start_time	= RTC.getDouble("slice_start_time");
 		double slice_timestep	= RTC.getDouble("slice_timestep");
 		std::string timestepmode= RTC.getString("slice_timestepmode");
 		auto timer_begin = std::chrono::high_resolution_clock::now();

@@ -131,21 +131,30 @@ namespace trt {
 			if(slice1 < 0 || slice2 >= n_slices)
 				throw std::runtime_error("T_lab=" + std::to_string(coord.t_lab) +
 				" requested by getHydroVar is out of range: ("+std::to_string(t_0)
-				+"<t<" + std::to_string(timestep*(n_slices-1)+t_0) + ").");
+				+"<t<" + std::to_string(timestep*(n_slices-1)+t_0) + "), slices ("+std::to_string(slice1)+","+std::to_string(slice2)+").");
 		} else if (timestepmode=="log") {
+			if(abs((coord.t_lab-t_0)/t_0)<1e-10) { // Extreme case rounding
+				coord.t_lab = t_0;
+			}	
 			if(coord.t_lab < t_0) 
 				throw std::runtime_error("T_lab=" + std::to_string(coord.t_lab) +
 				" requested by getHydroVar is out of range: ("+std::to_string(t_0)
-				+"<t<" + std::to_string(exp(timestep*(n_slices-1))*t_0) + ").");
+				+"<t<" + std::to_string(exp(timestep*(n_slices-1))*t_0) + ") .");
 			fractional_slice = log(coord.t_lab / t_0) / timestep; // BUG WILL CRASH FOR NEGATIVE TIME.
-			slice1 = floor( fractional_slice );
-			slice2 = ceil( fractional_slice );
+			// round to int for extreme case of fractional_slice approx slice:
+			if(abs(round(fractional_slice)-fractional_slice)<1e-12){
+				slice1 = round(fractional_slice);
+				slice2 = slice1;
+			} else {
+				slice1 = floor( fractional_slice );
+				slice2 = ceil( fractional_slice );
+			}
 			t1 = exp(slice1*timestep)*t_0;
 			t2 = exp(slice2*timestep)*t_0;
 			if(slice1 < 0 || slice2 >= n_slices)
 				throw std::runtime_error("T_lab=" + std::to_string(coord.t_lab) +
 				" requested by getHydroVar is out of range: ("+std::to_string(t_0)
-				+"<t<" + std::to_string(exp(timestep*(n_slices-1))*t_0) + ").");
+				+"<t<" + std::to_string(exp(timestep*(n_slices-1))*t_0) + "), slices ("+std::to_string(slice1)+","+std::to_string(slice2)+").");
 		} else {
 			throw std::runtime_error("Invalid timestepmode: '"+timestepmode+"' - it must be either 'equal' or 'log'.");
 		}
